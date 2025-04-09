@@ -8,10 +8,21 @@ Phufa Cafe POS System is a web-based Point of Sale (POS) application designed to
 
 ## Table of Contents
 
+- [Installation](#installation)
 - [Features](#features)
 - [Technology Stack](#technology-stack)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
+
+## Installation
+
+1.  **Configure Environment Variables:**
+    *   Copy the default environment file: `cp .env.default .env`
+    *   Edit the `.env` file with your specific configurations (database credentials, etc.).
+
+2.  **Run the Application:**
+    *   Use Docker Compose to build and start the services: `docker compose up`
+    *   The application should now be accessible, typically at [http://localhost/](http://localhost) (or as configured).
 
 ## Features
 
