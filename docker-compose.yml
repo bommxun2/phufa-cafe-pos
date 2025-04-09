@@ -1,0 +1,63 @@
+services:
+  database:
+    image: mariadb:11
+    container_name: phufa-database
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data:/var/lib/mysql
+    networks:
+      - app-network
+
+  proxy:
+    image: openresty/openresty:alpine
+    container_name: phufa-proxy
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./proxy/logs:/var/log/nginx
+      - ./proxy/html:/usr/share/nginx/html
+      - ./proxy/conf:/etc/nginx/conf.d/
+      - type: bind
+        source: ./proxy/nginx.conf
+        target: /usr/local/openresty/nginx/conf/nginx.conf
+    networks:
+      - app-network
+
+  frontend:
+    image: node:22-alpine
+    container_name: phufa-frontend
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+    networks:
+      - app-network
+
+  backend:
+    image: node:22-alpine
+    container_name: phufa-backend
+    restart: always
+    ports:
+      - 3001:3000
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+    depends_on:
+      - database
+      - frontend
+      - proxy
+
+networks:
+  app-network:

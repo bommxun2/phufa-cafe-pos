@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server Error - Phufa Cafe</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap");
+      :root {
+        --background-color: #dde0da;
+        --card-background: #ffffff;
+        --primary-color: #115e31;
+        --primary-hover-color: #0d4a27;
+        --text-dark: #333333;
+        --text-light: #555555;
+        --error-color: #dc3545;
+        --border-radius-card: 16px;
+        --border-radius-button: 8px;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: "Google Sans", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-dark);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+
+      .error-container {
+        background-color: var(--card-background);
+        padding: 40px 50px;
+        border-radius: var(--border-radius-card);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+      }
+
+      .loader-container {
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 60px;
+      }
+
+      .loader {
+        position: relative;
+        width: 50px;
+        height: 50px;
+      }
+
+      .loader .wave {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid var(--primary-color);
+        opacity: 0;
+        transform: scale(0);
+        animation: pulse-signal 2s ease-out infinite;
+      }
+
+      .loader .wave:nth-child(2) {
+        animation-delay: 0.5s;
+      }
+
+      .loader .wave:nth-child(3) {
+        animation-delay: 1s;
+      }
+
+      @keyframes pulse-signal {
+        0% {
+          transform: scale(0);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 0;
+        }
+      }
+
+      .error-container h1 {
+        font-size: 4.5rem;
+        color: var(--error-color);
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .error-container h2 {
+        font-size: 1.75rem;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .error-container p {
+        font-size: 1rem;
+        color: var(--text-light);
+        line-height: 1.6;
+      }
+
+      .error-container .button {
+        display: inline-block;
+        padding: 12px 35px;
+        background-color: var(--primary-color);
+        color: var(--card-background);
+        text-decoration: none;
+        border-radius: var(--border-radius-button);
+        font-size: 1rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .error-container .button:hover,
+      .error-container .button:focus {
+        background-color: var(--primary-hover-color);
+        outline: none;
+      }
+
+      @media (max-width: 600px) {
+        .error-container {
+          padding: 30px 25px;
+        }
+
+        .error-container h1 {
+          font-size: 3.5rem;
+        }
+
+        .error-container h2 {
+          font-size: 1.5rem;
+        }
+
+        .error-container p {
+          font-size: 0.9rem;
+        }
+
+        .error-container .button {
+          padding: 10px 30px;
+          font-size: 0.95rem;
+        }
+
+        .loader-container {
+          height: 50px;
+          margin-bottom: 25px;
+        }
+        .loader {
+          width: 40px;
+          height: 40px;
+        }
+        .loader .wave {
+          border-width: 2px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <div class="loader-container">
+        <div class="loader">
+          <div class="wave"></div>
+          <div class="wave"></div>
+          <div class="wave"></div>
+        </div>
+      </div>
+      <h1>500</h1>
+      <h2>ระบบขัดข้องชั่วคราว</h2>
+      <p>
+        ขออภัยในความไม่สะดวก ขณะนี้ระบบกำลังอยู่ระหว่างการตรวจสอบ โปรดลองอีกครั้งในไม่ช้า
+      </p>
+    </div>
+  </body>
+</html>
