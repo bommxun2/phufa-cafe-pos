@@ -26,19 +26,20 @@ Phufa Cafe POS System is a web-based Point of Sale (POS) application designed to
 
 ## Features
 
-* **Menu Management:** Add, edit, and manage menu items and categories.
-* **Order Management:**  Take orders digitally, track order status, and manage order history.
-* **Automated Calculation:**  System automatically calculates order totals and generates receipts.
-* **Real-time Sales Reporting:**  Track sales data in real-time and generate daily sales reports.
-* **Employee Management:** (Optional - if implemented) Manage employee accounts and roles.
-* **Customer Loyalty Program:** (Optional - if implemented) Implement a point-based loyalty program for customers.
-* **Store Information Management:** Manage store opening and closing times.
+*   **Menu Management:** Add, edit, delete, and change the status of menu items and view recipes.
+*   **Order Taking & Management:** Employees can digitally record customer orders and update order statuses (e.g., pending, paid).
+*   **Automated Calculation & Receipt Generation:** The system automatically calculates order totals based on items and customizations. (Receipt generation is implied for POS).
+*   **Sales Reporting:** Track sales data in real-time and generate daily sales summary reports for the owner.
+*   **Employee Management:** Add and edit employee information (name, role, salary) and manage system access.
+*   **Customer Management:** Manage customer information.
+*   **Customer Loyalty Program:** Implement a point-based system for customers to accumulate points and redeem rewards (e.g., free drinks).
+*   **Inventory Management:** Manage ingredients/stock levels, automatically updating quantities based on menu items sold according to their recipes.
 
 ## Technology Stack
 
-* **Frontend:** Next.js (Version 15)
-* **Backend:** Next.js (Version 15)
-* **Database:** MariaDB (Version 11.8)
+* **Frontend:** Node.js (Version 22)
+* **Backend:** Node.js (Version 22)
+* **Database:** MariaDB (Version 11)
 
 ## License
 
