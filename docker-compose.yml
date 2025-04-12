@@ -15,7 +15,7 @@ services:
     volumes:
       - ./data:/var/lib/mysql
     networks:
-      - app-network
+      - backend-net
 
   proxy:
     image: openresty/openresty:alpine
@@ -32,32 +32,38 @@ services:
         target: /usr/local/openresty/nginx/conf/nginx.conf
     networks:
       - app-network
+    depends_on:
+      - frontend
+      - backend
 
   frontend:
-    image: node:22-alpine
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: phufa-frontend
     restart: always
-    ports:
-      - 3000:3000
     volumes:
       - ./frontend:/app
+      - ./backend/node_modules:/app/node_modules/
     networks:
       - app-network
 
   backend:
-    image: node:22-alpine
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: phufa-backend
     restart: always
-    ports:
-      - 3001:3000
     volumes:
       - ./backend:/app
+      - ./backend/node_modules:/app/node_modules/
     networks:
       - app-network
+      - backend-net
+    working_dir: /app
     depends_on:
       - database
-      - frontend
-      - proxy
 
 networks:
   app-network:
+  backend-net:
