@@ -38,7 +38,7 @@ services:
 
   frontend:
     build:
-      context: ./backend
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: phufa-frontend
     restart: always
