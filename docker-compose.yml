@@ -54,8 +54,6 @@ services:
       dockerfile: Dockerfile
     container_name: phufa-backend
     restart: always
-    ports:
-      - "3000:3000"
     volumes:
       - ./backend:/app
       - /app/node_modules/
