@@ -6,11 +6,11 @@ const port = 3000;
 app.use(express.json());
 
 // Routes
-const reportsRouter = require('./routes/reports');
-const ordersRouter = require('./routes/orders');
+const reportsRouter = require('./routes/route.report');
+const ordersRouter = require('./routes/route.order');
 
 app.use('/reports', reportsRouter);
-app.use('/orders', ordersRouter);
+app.use('/employees', ordersRouter);
 
 app.get("/", (req, res) => {
   res.json({
