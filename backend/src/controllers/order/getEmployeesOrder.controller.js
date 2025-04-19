@@ -1,5 +1,5 @@
 // Get all orders for a specific employee
-const getEmployeeOrders = (req, res) => {
+module.exports = (req, res) => {
     const { empId } = req.params;
     
     // Validate employee ID format
@@ -39,7 +39,3 @@ const getEmployeeOrders = (req, res) => {
         }
     ]);
 };
-
-module.exports = {
-    getEmployeeOrders
-}; 

@@ -1,5 +1,5 @@
 // Get daily income summary
-const getDailyIncome = (req, res) => {
+module.exports = (req, res) => {
     const { date } = req.query;
     
     // Validate date format (YYYY-MM-DD)
@@ -18,7 +18,3 @@ const getDailyIncome = (req, res) => {
         note: 'Income calculation only includes paid orders'
     });
 };
-
-module.exports = {
-    getDailyIncome
-}; 
