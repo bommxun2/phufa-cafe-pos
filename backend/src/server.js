@@ -2,6 +2,16 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
+// Middleware
+app.use(express.json());
+
+// Routes
+const reportsRouter = require('./routes/reports');
+const ordersRouter = require('./routes/orders');
+
+app.use('/reports', reportsRouter);
+app.use('/orders', ordersRouter);
+
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
