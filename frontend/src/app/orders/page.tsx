@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
-import OrderList from '@/components/OrderList';
-import OrderDetail from '@/components/OrderDetail';
+import Header from '@/components/layout/Header';
+import OrderList from '@/components/order/OrderList';
+import OrderDetail from '@/components/order/OrderDetail';
 
 export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);

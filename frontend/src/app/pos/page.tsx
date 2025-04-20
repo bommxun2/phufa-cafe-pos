@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import Header from '@/components/layout/Header';
 import CategoryGrid from '@/components/CategoryGrid';
 import ProductGrid from '@/components/ProductGrid';
-import OrderDetail from '@/components/OrderDetail';
+import OrderDetail from '@/components/order/OrderDetail';
 
 export default function POS() {
   const [selectedCategory, setSelectedCategory] = useState('Coffee');

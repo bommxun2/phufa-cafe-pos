@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import MenuTable from '@/components/MenuTable';
-import MenuDetail from '@/components/MenuDetail';
-import Header from '@/components/Header';
+import MenuTable from '@/components/menu/MenuTable';
+import MenuDetail from '@/components/menu/MenuDetail';
+import Header from '@/components/layout/Header';
 
 export default function Dashboard() {
   const [selectedMenu, setSelectedMenu] = useState(null);
