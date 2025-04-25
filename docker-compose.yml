@@ -56,6 +56,7 @@ services:
     restart: always
     volumes:
       - ./backend:/app
+      - ./.env:/app/.env
       - /app/node_modules/
     networks:
       - app-network

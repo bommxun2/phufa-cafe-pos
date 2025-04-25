@@ -10,6 +10,8 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "express": "^5.1.0"
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mariadb": "^3.4.1"
   }
 }
