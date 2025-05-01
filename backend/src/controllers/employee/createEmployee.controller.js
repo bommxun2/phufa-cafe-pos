@@ -87,10 +87,10 @@ const createEmployee = async (req, res, next) => {
 
         } catch (queryError) {
             console.error(`Error during Person CitizenID query for ID ${citizenId}:`, queryError);
-             if (connection) {
-                 try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
-                 try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
-             }
+            if (connection) {
+                try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
+                try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
+            }
             throw queryError; // Re-throw the error to be caught by the main try-catch
         }
 
@@ -104,27 +104,27 @@ const createEmployee = async (req, res, next) => {
             }
 
             if (queryResultPhone.length === 0) {
-                 personPhoneRows = [];
+                personPhoneRows = [];
             } else if (Array.isArray(queryResultPhone[0]) && queryResultPhone.length === 2 && Array.isArray(queryResultPhone[1])) {
-                 personPhoneRows = queryResultPhone[0];
+                personPhoneRows = queryResultPhone[0];
             } else if (queryResultPhone.length > 0 && typeof queryResultPhone[0] === 'object' && queryResultPhone[0] !== null) {
-                 personPhoneRows = queryResultPhone;
+                personPhoneRows = queryResultPhone;
             } else {
-                 throw new Error('Unexpected array structure from database query for Person PhoneNum check.');
+                throw new Error('Unexpected array structure from database query for Person PhoneNum check.');
             }
 
             if (personPhoneRows.length > 0) {
-                 await connection.rollback();
-                 connection.release();
-                 return res.status(400).json({ message: 'Bad Request - Phone number already registered.' });
+                await connection.rollback();
+                connection.release();
+                return res.status(400).json({ message: 'Bad Request - Phone number already registered.' });
             }
 
         } catch (queryError) {
             console.error(`Error during Person PhoneNum query for ${phoneNum}:`, queryError);
-             if (connection) {
-                 try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
-                 try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
-             }
+            if (connection) {
+                try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
+                try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
+            }
             throw queryError; // Re-throw
         }
 
@@ -134,7 +134,7 @@ const createEmployee = async (req, res, next) => {
             const queryResultEmpId = await connection.query('SELECT EmpID FROM Employee WHERE EmpID = ? LIMIT 1', [empId]);
 
             if (!Array.isArray(queryResultEmpId)) {
-                 throw new Error('Unexpected non-array database query result for Employee EmpID check.');
+                throw new Error('Unexpected non-array database query result for Employee EmpID check.');
             }
 
             if (queryResultEmpId.length === 0) {
@@ -155,10 +155,10 @@ const createEmployee = async (req, res, next) => {
 
         } catch (queryError) {
             console.error(`Error during Employee EmpID query for ID ${empId}:`, queryError);
-             if (connection) {
-                 try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
-                 try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
-             }
+            if (connection) {
+                try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
+                try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
+            }
             throw queryError; // Re-throw
         }
 
@@ -166,50 +166,50 @@ const createEmployee = async (req, res, next) => {
         // 4.4 Check CitizenID in Employee table (UNIQUE constraint)
         let employeeCitizenRows;
         try {
-             const queryResultEmpCitizen = await connection.query('SELECT CitizenID FROM Employee WHERE CitizenID = ? LIMIT 1', [citizenId]);
+            const queryResultEmpCitizen = await connection.query('SELECT CitizenID FROM Employee WHERE CitizenID = ? LIMIT 1', [citizenId]);
 
-             if (!Array.isArray(queryResultEmpCitizen)) {
-                 throw new Error('Unexpected non-array database query result for Employee CitizenID check.');
-             }
+            if (!Array.isArray(queryResultEmpCitizen)) {
+                throw new Error('Unexpected non-array database query result for Employee CitizenID check.');
+            }
 
-             if (queryResultEmpCitizen.length === 0) {
-                 employeeCitizenRows = [];
-             } else if (Array.isArray(queryResultEmpCitizen[0]) && queryResultEmpCitizen.length === 2 && Array.isArray(queryResultEmpCitizen[1])) {
-                 employeeCitizenRows = queryResultEmpCitizen[0];
-             } else if (queryResultEmpCitizen.length > 0 && typeof queryResultEmpCitizen[0] === 'object' && queryResultEmpCitizen[0] !== null) {
-                 employeeCitizenRows = queryResultEmpCitizen;
-             } else {
-                 throw new Error('Unexpected array structure from database query for Employee CitizenID check.');
-             }
+            if (queryResultEmpCitizen.length === 0) {
+                employeeCitizenRows = [];
+            } else if (Array.isArray(queryResultEmpCitizen[0]) && queryResultEmpCitizen.length === 2 && Array.isArray(queryResultEmpCitizen[1])) {
+                employeeCitizenRows = queryResultEmpCitizen[0];
+            } else if (queryResultEmpCitizen.length > 0 && typeof queryResultEmpCitizen[0] === 'object' && queryResultEmpCitizen[0] !== null) {
+                employeeCitizenRows = queryResultEmpCitizen;
+            } else {
+                throw new Error('Unexpected array structure from database query for Employee CitizenID check.');
+            }
 
-             if (employeeCitizenRows.length > 0) {
-                 await connection.rollback();
-                 connection.release();
-                 return res.status(400).json({ message: 'Bad Request - Citizen ID already registered as an employee.' });
-             }
+            if (employeeCitizenRows.length > 0) {
+                await connection.rollback();
+                connection.release();
+                return res.status(400).json({ message: 'Bad Request - Citizen ID already registered as an employee.' });
+            }
 
         } catch (queryError) {
             console.error(`Error during Employee CitizenID query for ID ${citizenId}:`, queryError);
-             if (connection) {
-                 try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
-                 try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
-             }
+            if (connection) {
+                try { await connection.rollback(); } catch (rbErr) { console.error('Rollback failed in query catch:', rbErr); }
+                try { connection.release(); } catch (rlErr) { console.error('Release failed in query catch:', rlErr); }
+            }
             throw queryError; // Re-throw
         }
 
 
         // 5. บันทึกข้อมูลลงตาราง Person (ใช้ชื่อคอลัมน์ตาม DB)
         const personQuery = `
-           INSERT INTO Person (CitizenID, FirstName, LastName, Gender, PhoneNum, Address, ProfileURL)
-           VALUES (?, ?, ?, ?, ?, ?, ?);
+            INSERT INTO Person (CitizenID, FirstName, LastName, Gender, PhoneNum, Address, ProfileURL)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
         `;
         const personValues = [citizenId, firstname, lastname, gender, phoneNum, address, profileUrl];
         await connection.query(personQuery, personValues);
 
         // 6. บันทึกข้อมูลลงตาราง Employee (ใช้ชื่อคอลัมน์ตาม DB)
         const employeeQuery = `
-           INSERT INTO Employee (EmpID, CitizenID, EmpPasswordHash, EmpRole, EmpSalary)
-           VALUES (?, ?, ?, ?, ?);
+            INSERT INTO Employee (EmpID, CitizenID, EmpPasswordHash, EmpRole, EmpSalary)
+            VALUES (?, ?, ?, ?, ?);
         `;
         const employeeValues = [empId, citizenId, passwordHash, empRole, empSalary];
         await connection.query(employeeQuery, employeeValues);
