@@ -1,5 +1,8 @@
 const pool = require('../../utils/database');
 const argon2 = require('argon2');
+const dotenv = require("dotenv");
+
+dotenv.config({path: '.env'});
 
 /**
  * @description Controller สำหรับสร้างพนักงานใหม่ (POST /employees)
@@ -42,7 +45,15 @@ const createEmployee = async (req, res, next) => {
     let connection;
     try {
         // 3. Hash Password
-        const passwordHash = await argon2.hash(password);
+        const passwordHash = await argon2.hash(password, {
+            hashLength: 32,
+            memoryCost: 5120,
+            timeCost: 2,
+            parallelism: 1,
+            type: argon2.argon2d,
+            version: 19,
+            secret: Buffer.from(process.env.APP_SECRET, "utf8")
+        });
 
         // Transaction
         connection = await pool.getConnection();
