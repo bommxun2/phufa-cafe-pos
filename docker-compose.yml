@@ -65,6 +65,21 @@ services:
     depends_on:
       - database
 
+  init-db:
+    build:
+      context: ./init-db
+      dockerfile: Dockerfile
+    container_name: phufa-init-db
+    restart: "no"
+    depends_on:
+      - database
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    networks:
+      - backend-net
+
 networks:
   app-network:
   backend-net:
