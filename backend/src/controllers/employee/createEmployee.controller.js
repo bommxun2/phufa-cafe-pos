@@ -247,7 +247,7 @@ const createEmployee = async (req, res, next) => {
         const createdEmployeeDataFromDb = employeeRows;
 
         // 8. ส่ง Response กลับ (201 Created)
-        res.status(201).json({ message: "Employee created successfully", data: createdEmployeeDataFromDb });
+        res.status(201).json(createdEmployeeDataFromDb);
 
     } catch (error) {
         // --- Rollback Transaction (ถ้าเกิด Error) ---
