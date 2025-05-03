@@ -1,4 +1,4 @@
-const body = require("express-validator");
+const { body } = require("express-validator");
 
 const menuValidator = [
   body("menuName").isString().notEmpty(),
@@ -14,4 +14,4 @@ const menuValidator = [
   body("defaultRecipe.*.isReplaceable").isBoolean(),
 ];
 
-module.exports = menuValidator
+module.exports = menuValidator;
