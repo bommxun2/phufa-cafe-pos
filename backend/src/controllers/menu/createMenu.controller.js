@@ -1,5 +1,5 @@
 const pool = require("../../utils/database");
-const validationResult = require("express-validator");
+const { validationResult } = require("express-validator");
 
 const createMenu = async (req, res) => {
   const { menu } = req.body;
@@ -14,7 +14,7 @@ const createMenu = async (req, res) => {
   var conn;
   try {
     const getMenuPk = `SELECT ISNULL(MAX(MenuId), 0) FROM Menu);`;
-    
+
     const insertMenu = `
     INSERT INTO Menu (MenuId, MenuName, MenuPrice, MenuStatus, MenuDescription, MenuURL, MenuCategory)
     VALUES (?, ?, ?, ?, ?, ?, ?);

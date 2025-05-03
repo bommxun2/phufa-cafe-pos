@@ -1,5 +1,5 @@
 const pool = require("../../utils/database");
-const validationResult = require("express-validator");
+const { validationResult } = require("express-validator");
 
 const updateMenu = async (req, res) => {
   const { menu } = req.body;
