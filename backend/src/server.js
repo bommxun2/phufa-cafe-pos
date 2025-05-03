@@ -10,6 +10,7 @@ const orderRoutes = require("./routes/order.route");
 const reportsRouter = require('./routes/report.route');
 const employeesRouter = require('./routes/employee.route');
 const customerRouter = require('./routes/customer.route');
+const menuRoutes = require("./routes/menu.route");
 
 app.use(express.json());
 
@@ -17,6 +18,7 @@ app.use('/order', orderRoutes);
 app.use('/reports', reportsRouter);
 app.use('/employees', employeesRouter);
 app.use('/customers', customerRouter);
+app.use('/menu', menuRoutes);
 
 app.get("/", (req, res) => {
   res.json({
