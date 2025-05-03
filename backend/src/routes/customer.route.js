@@ -1,7 +1,8 @@
 const express = require('express');
 const createCustomerController = require('../controllers/customer/createCustomer.controller');
 const updateCustomerController = require('../controllers/customer/updateCustomer.controller');
-
+const collectPointController = require('../controllers/customer/collectPoint.controller');
+const redeemPointController = require('../controllers/customer/redeemPoint.controller');
 const router = express.Router();
 
 // Route: POST /api/customers
@@ -13,9 +14,11 @@ router.post('/', createCustomerController);
 // (:customerId คือ CitizenID)
 router.put('/:customerId', updateCustomerController);
 
-const collectPointController = require('../controllers/customer/collectPoint.controller');
-
-// Route: POST /:customerId/point
+// Route: POST /api/customers/:customerId/points //เก็บแต้ม
+// Controller: collectPointController
 router.post('/:customerId/points', collectPointController);
+// Route: POST /api/customers/:customerId/redeem //แลกแต้ม
+// Controller: redeemPointController
+router.post('/:customerId/redeem', redeemPointController);
 
 module.exports = router;
