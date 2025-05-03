@@ -5,7 +5,7 @@ const collectPointController = async (req, res) => {
     const { pointsToAdd } = req.body;
 
     if (!pointsToAdd || !customerId) {
-        return res.status(400).json({ message: 'ต้องระบุ customerId และ pointsToAdd' });
+        return res.status(400).json({ message: 'Required customerId and pointsToAdd' });
     }
 
     let conn;
@@ -16,7 +16,7 @@ const collectPointController = async (req, res) => {
         const rows = await conn.query('SELECT * FROM Customer WHERE CitizenID = ?', [customerId]);
 
         if (rows.length === 0) {
-          return res.status(404).json({ message: 'ไม่พบลูกค้า' });
+          return res.status(404).json({ message: 'Customer not found!' });
         }
         
         const customer = rows[0];
@@ -28,7 +28,7 @@ const collectPointController = async (req, res) => {
 
         //just in case in the future we want to tell customer that you can redeem the point
         /*const rewardMessage = newPoint >= 10
-            ? 'คุณมีสิทธิ์แลกรับเครื่องดื่มฟรี!'
+            ? 'You are eligible to redeem a free drink!'
             : null;*/
 
         res.status(200).json({
@@ -38,7 +38,7 @@ const collectPointController = async (req, res) => {
 
     } catch (err) {
         console.error('Error collecting point:', err);
-        res.status(500).json({ message: `เกิดข้อผิดพลาด ${err.message}` });
+        res.status(500).json({ message: `Error occured ${err.message}` });
     } finally {
         if (conn) await conn.release();
     }
