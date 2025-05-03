@@ -13,9 +13,11 @@ const createMenu = async (req, res) => {
 
   var conn;
   try {
+    const getMenuPk = `SELECT ISNULL(MAX(MenuId), 0) FROM Menu);`;
+    
     const insertMenu = `
-    INSERT INTO Menu (MenuName, MenuPrice, MenuStatus, MenuDescription, MenuURL, MenuCategory)
-    VALUES (?, ?, ?, ?, ?, ?);
+    INSERT INTO Menu (MenuId, MenuName, MenuPrice, MenuStatus, MenuDescription, MenuURL, MenuCategory)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
     `;
 
     const insertDefaultRecipe = `
@@ -25,6 +27,20 @@ const createMenu = async (req, res) => {
 
     conn = await pool.getConnection();
     await conn.beginTransaction();
+
+    // Increase PK
+    let id = await conn.query(getMenuPk);
+    if (id == 0) {
+      id = "M000000001";
+    } else {
+      const prefix = id.slice(0, 1);
+      const number = parseInt(id.slice(1));
+
+      const newNumber = number + 1;
+      const padded = String(newNumber).padStart(9, "0");
+
+      id = prefix + padded;
+    }
 
     let result = await conn.query(insertMenu, [
       menu.menuName,
@@ -67,4 +83,4 @@ const createMenu = async (req, res) => {
   }
 };
 
-module.exports = createMenu
+module.exports = createMenu;
