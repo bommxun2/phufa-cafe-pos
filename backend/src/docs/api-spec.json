@@ -1,0 +1,2403 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Phufa Cafe POS API",
+    "description": "API for managing the Phufa Café Point of Sale system, including menus, ingredients, orders, customers, and employees.",
+    "contact": {
+      "name": "Phufa Cafe Dev Team (Group 15)"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://phufa.krittamark.com/api",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Menu",
+      "description": "Operations related to food and drink menu items."
+    },
+    {
+      "name": "Ingredient",
+      "description": "Operations related to ingredients and stock."
+    },
+    {
+      "name": "Order",
+      "description": "Operations related to customer orders."
+    },
+    {
+      "name": "Employee",
+      "description": "Operations related to employee management and authentication."
+    },
+    {
+      "name": "Customer",
+      "description": "Operations related to customer information and loyalty points."
+    },
+    {
+      "name": "Reports",
+      "description": "Operations for generating sales reports."
+    },
+    {
+      "name": "Authentication",
+      "description": "Operations for user login."
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Employee Login",
+        "description": "Authenticate an employee using their Employee ID and password to obtain an access token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "empId": {
+                    "type": "string",
+                    "description": "Employee ID",
+                    "example": "6609696969"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "Employee Password",
+                    "example": "secretpassword"
+                  }
+                },
+                "required": ["empId", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string",
+                      "description": "JWT token for subsequent authenticated requests.",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Type of token issued.",
+                      "example": "Bearer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing fields."
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials."
+          }
+        }
+      }
+    },
+    "/menu": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "List All Menu Items",
+        "description": "Retrieves a list of all available menu items, optionally filtered by category.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Filter menu items by category name.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "กาแฟ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of menu items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Menu"],
+        "summary": "Add a New Menu Item",
+        "description": "Creates a new menu item along with its default recipe ingredients. Requires admin/owner privileges.",
+        "requestBody": {
+          "required": true,
+          "description": "Menu item details and default recipe.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu item created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Menu"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/menu/{menuId}": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "Get Menu Item by ID",
+        "description": "Retrieves details of a specific menu item by its ID.",
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the menu item.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "M213560000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Menu"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Menu item not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Menu"],
+        "summary": "Update an Existing Menu Item",
+        "description": "Updates details and the default recipe of an existing menu item. Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the menu item to update.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "M213560000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated menu item details and recipe.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu item updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Menu"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "404": {
+            "description": "Menu item not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["Menu"],
+        "summary": "Update Menu Item Status",
+        "description": "Partially updates a menu item, specifically its status (e.g., available/unavailable). Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the menu item to update.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "M213560000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update (e.g., status).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "menuStatus": {
+                    "type": "string",
+                    "description": "The new status of the menu item.",
+                    "example": "ไม่พร้อมขาย"
+                  }
+                },
+                "required": ["menuStatus"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu item status updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Menu"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "404": {
+            "description": "Menu item not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Menu"],
+        "summary": "Delete a Menu Item",
+        "description": "Deletes a specific menu item. Requires admin/owner privileges. (Use with caution, consider soft delete or status change).",
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the menu item to delete.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "M213560000"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Menu item deleted successfully."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "404": {
+            "description": "Menu item not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/menu/{menuId}/recipe": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "Get Default Recipe for a Menu Item",
+        "description": "Retrieves the default ingredients and quantities for a specific menu item.",
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the menu item.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "M213560000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DefaultRecipe"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Menu item not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/ingredients": {
+      "get": {
+        "tags": ["Ingredient"],
+        "summary": "List All Ingredients",
+        "description": "Retrieves a list of all ingredients in stock.",
+        "responses": {
+          "200": {
+            "description": "A list of ingredients.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ingredient"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Ingredient"],
+        "summary": "Add a New Ingredient",
+        "description": "Adds a new ingredient to the stock system. Requires admin/owner privileges.",
+        "requestBody": {
+          "required": true,
+          "description": "Ingredient details.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngredientCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ingredient added successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ingredient"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data or duplicate ID."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/ingredients/{ingredientId}": {
+      "get": {
+        "tags": ["Ingredient"],
+        "summary": "Get Ingredient by ID",
+        "description": "Retrieves details of a specific ingredient by its ID.",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the ingredient.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "I985630000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ingredient"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Ingredient not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Ingredient"],
+        "summary": "Update an Existing Ingredient",
+        "description": "Updates details of an existing ingredient (e.g., quantity, price, category). Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the ingredient to update.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "I985630000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated ingredient details.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngredientUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ingredient updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ingredient"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "404": {
+            "description": "Ingredient not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Ingredient"],
+        "summary": "Delete an Ingredient",
+        "description": "Deletes a specific ingredient. Checks for dependencies (e.g., usage in recipes) before deletion. Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "ingredientId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the ingredient to delete.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "I985630000"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Ingredient deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request - Cannot delete ingredient due to dependencies."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden - Insufficient privileges."
+          },
+          "404": {
+            "description": "Ingredient not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/ingredient-categories": {
+      "get": {
+        "tags": ["Ingredient"],
+        "summary": "List Ingredient Categories",
+        "description": "Retrieves a list of all ingredient categories.",
+        "responses": {
+          "200": {
+            "description": "A list of ingredient categories.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngredientCategory"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": ["Order"],
+        "summary": "List All Orders",
+        "description": "Retrieves a list of all orders, potentially filterable by status, date range, employee, or customer. Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by order status (true=paid, false=pending)."
+          },
+          {
+            "name": "employeeId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter orders handled by a specific employee ID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of orders.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Order"],
+        "summary": "Create a New Order",
+        "description": "Creates a new customer order. Handled by an authenticated employee. Automatically updates ingredient stock upon successful payment (or upon creation if policy dictates).",
+        "requestBody": {
+          "required": true,
+          "description": "Order details including items, customer (optional), and handling employee.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully (likely in pending payment status).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input, insufficient stock, etc."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": ["Order"],
+        "summary": "Get Order by ID",
+        "description": "Retrieves details of a specific order, including its items and customizations.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the order.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "O265980000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Order not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["Order"],
+        "summary": "Update Order Status (e.g., Mark as Paid)",
+        "description": "Updates the status of an order, typically to mark it as paid. This may trigger stock adjustments if not done at creation.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the order to update.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "O265980000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "The new status for the order.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderStatus": {
+                    "type": "boolean",
+                    "description": "The new status (true for paid, false for pending).",
+                    "example": true
+                  }
+                },
+                "required": ["orderStatus"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order status updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid status transition or other error."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Order not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Order"],
+        "summary": "Cancel/Delete an Order",
+        "description": "Cancels or deletes an unpaid order. Paid orders usually cannot be deleted via API. Requires specific privileges.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the order to delete.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "O265980000"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Order deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request - Cannot delete a paid order."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Order not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/employees": {
+      "get": {
+        "tags": ["Employee"],
+        "summary": "List All Employees",
+        "description": "Retrieves a list of all employees. Requires admin/owner privileges.",
+        "responses": {
+          "200": {
+            "description": "A list of employees.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Employee"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Employee"],
+        "summary": "Add a New Employee",
+        "description": "Creates a new employee record. Requires admin/owner privileges.",
+        "requestBody": {
+          "required": true,
+          "description": "Employee details.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Employee created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input or duplicate ID/CitizenID."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/employees/{empId}": {
+      "get": {
+        "tags": ["Employee"],
+        "summary": "Get Employee by ID",
+        "description": "Retrieves details of a specific employee by their Employee ID. Requires admin/owner privileges or self-access.",
+        "parameters": [
+          {
+            "name": "empId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the employee.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6609696969"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Employee not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Employee"],
+        "summary": "Update an Existing Employee",
+        "description": "Updates details of an existing employee. Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "empId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the employee to update.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6609696969"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated employee details (password change might be separate).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Employee updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Employee not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Employee"],
+        "summary": "Delete an Employee",
+        "description": "Deletes a specific employee record. Consider implications (e.g., reassigning orders). Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "empId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the employee to delete.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6609696969"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Employee deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request - Cannot delete employee (e.g., active orders)."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Employee not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/employees/{empId}/orders": {
+      "get": {
+        "tags": ["Order", "Employee"],
+        "summary": "Get Orders Handled by Employee",
+        "description": "Retrieves a list of all orders handled by a specific employee.",
+        "parameters": [
+          {
+            "name": "empId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the employee.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "6609696969"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of orders handled by the employee.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden (if not admin or self)."
+          },
+          "404": {
+            "description": "Employee not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/customers": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "List All Customers",
+        "description": "Retrieves a list of all registered customers. Requires admin/owner privileges.",
+        "responses": {
+          "200": {
+            "description": "A list of customers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Customer"],
+        "summary": "Add a New Customer",
+        "description": "Creates a new customer record. Can be done by employees.",
+        "requestBody": {
+          "required": true,
+          "description": "Customer details.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input or duplicate CitizenID/Phone."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/customers/{customerId}": {
+      "get": {
+        "tags": ["Customer"],
+        "summary": "Get Customer by ID",
+        "description": "Retrieves details of a specific customer using their Citizen ID.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "description": "The Citizen ID of the customer.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{13}$"
+            },
+            "example": "1266985663999"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Customer not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Customer"],
+        "summary": "Update an Existing Customer",
+        "description": "Updates details of an existing customer.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "description": "The Citizen ID of the customer to update.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{13}$"
+            },
+            "example": "1266985663999"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Updated customer details.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Customer not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/customers/{customerId}/points": {
+      "post": {
+        "tags": ["Customer"],
+        "summary": "Add Loyalty Points",
+        "description": "Adds loyalty points to a customer's account, usually after a paid order.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "description": "The Citizen ID of the customer.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{13}$"
+            },
+            "example": "1266985663999"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Number of points to add.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pointsToAdd": {
+                    "type": "integer",
+                    "description": "The number of points being added.",
+                    "example": 1
+                  }
+                },
+                "required": ["pointsToAdd"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Points added successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "citizenId": {
+                      "type": "string"
+                    },
+                    "newPointBalance": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid points value."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Customer not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/customers/{customerId}/redeem": {
+      "post": {
+        "tags": ["Customer"],
+        "summary": "Redeem Loyalty Points for Free Drink",
+        "description": "Redeems 10 points from a customer's account for a free drink reward.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "description": "The Citizen ID of the customer.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{13}$"
+            },
+            "example": "1266985663999"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Points redeemed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "citizenId": {
+                      "type": "string"
+                    },
+                    "newPointBalance": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Free drink reward applied."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Insufficient points (less than 10)."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "404": {
+            "description": "Customer not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/reports/daily-income": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get Daily Income Summary",
+        "description": "Calculates and returns the total income from paid orders for a specific date. Requires admin/owner privileges.",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "description": "The date for which to calculate income (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2024-03-21"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily income summary retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "totalIncome": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "Total income for the specified date."
+                    },
+                    "orderCount": {
+                      "type": "integer",
+                      "description": "Number of paid orders included in the summary."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid date format."
+          },
+          "401": {
+            "description": "Unauthorized."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PersonBase": {
+        "type": "object",
+        "properties": {
+          "citizenId": {
+            "type": "string",
+            "description": "Unique 13-digit National ID number. Primary Key for Person.",
+            "example": "1266985663999",
+            "pattern": "^\\d{13}$",
+            "readOnly": true
+          },
+          "firstname": {
+            "type": "string",
+            "description": "First name.",
+            "example": "สมชาย",
+            "maxLength": 20
+          },
+          "lastname": {
+            "type": "string",
+            "description": "Last name.",
+            "example": "หล่อเหลา",
+            "maxLength": 20
+          },
+          "gender": {
+            "type": "string",
+            "description": "Gender (M/F/O or specific values).",
+            "example": "F",
+            "maxLength": 1
+          },
+          "phoneNum": {
+            "type": "string",
+            "description": "Mobile phone number.",
+            "example": "0699696999",
+            "maxLength": 10
+          },
+          "address": {
+            "type": "string",
+            "description": "Full address.",
+            "example": "99 ม.18 ถ.พหลโยธิน ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี 12121",
+            "maxLength": 128
+          },
+          "profileUrl": {
+            "type": "string",
+            "format": "url",
+            "description": "URL to the person's profile picture.",
+            "example": "https://example.com/image.jpg",
+            "maxLength": 100
+          }
+        },
+        "required": ["firstname", "lastname", "phoneNum"]
+      },
+      "Employee": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "empId": {
+                "type": "string",
+                "description": "Unique Employee ID. Primary Key for Employee.",
+                "example": "6609696969",
+                "maxLength": 10,
+                "readOnly": true
+              },
+              "empRole": {
+                "type": "string",
+                "description": "Job title or role.",
+                "example": "แคชเชียร์",
+                "maxLength": 50
+              },
+              "empSalary": {
+                "type": "number",
+                "format": "float",
+                "description": "Monthly salary.",
+                "example": 25000
+              }
+            },
+            "required": ["empId", "empRole", "empSalary"]
+          }
+        ]
+      },
+      "EmployeeCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "empId": {
+                "type": "string",
+                "description": "Unique Employee ID to be assigned.",
+                "example": "6609696969",
+                "maxLength": 10
+              },
+              "empRole": {
+                "type": "string",
+                "description": "Job title or role.",
+                "example": "แคชเชียร์",
+                "maxLength": 50
+              },
+              "empSalary": {
+                "type": "number",
+                "format": "float",
+                "description": "Monthly salary.",
+                "example": 25000
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "Employee's initial password.",
+                "example": "newSecretPassword"
+              }
+            },
+            "required": [
+              "citizenId",
+              "empId",
+              "empRole",
+              "empSalary",
+              "password"
+            ]
+          }
+        ]
+      },
+      "EmployeeUpdate": {
+        "type": "object",
+        "properties": {
+          "firstname": {
+            "type": "string",
+            "example": "สมชาย"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "หล่อเหลา"
+          },
+          "gender": {
+            "type": "string",
+            "example": "F"
+          },
+          "phoneNum": {
+            "type": "string",
+            "example": "0699696999"
+          },
+          "address": {
+            "type": "string",
+            "example": "New Address"
+          },
+          "profileUrl": {
+            "type": "string",
+            "format": "url"
+          },
+          "empRole": {
+            "type": "string",
+            "example": "ผู้จัดการ"
+          },
+          "empSalary": {
+            "type": "number",
+            "format": "float",
+            "example": 30000
+          }
+        }
+      },
+      "Customer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "point": {
+                "type": "integer",
+                "description": "Current loyalty point balance.",
+                "example": 9,
+                "readOnly": true
+              }
+            },
+            "required": ["point"]
+          }
+        ]
+      },
+      "CustomerCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonBase"
+          }
+        ],
+        "required": ["citizenId"]
+      },
+      "CustomerUpdate": {
+        "type": "object",
+        "properties": {
+          "firstname": {
+            "type": "string",
+            "example": "สมหญิง"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "ใจดี"
+          },
+          "gender": {
+            "type": "string",
+            "example": "F"
+          },
+          "phoneNum": {
+            "type": "string",
+            "example": "0812345678"
+          },
+          "address": {
+            "type": "string",
+            "example": "Updated Address"
+          },
+          "profileUrl": {
+            "type": "string",
+            "format": "url"
+          }
+        }
+      },
+      "Menu": {
+        "type": "object",
+        "properties": {
+          "menuId": {
+            "type": "string",
+            "description": "Unique ID for the menu item.",
+            "example": "M213560000",
+            "maxLength": 10,
+            "readOnly": true
+          },
+          "menuName": {
+            "type": "string",
+            "description": "Name of the menu item.",
+            "example": "ลาเต้",
+            "maxLength": 20
+          },
+          "menuPrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Standard price of the menu item.",
+            "example": 55
+          },
+          "menuStatus": {
+            "type": "string",
+            "description": "Availability status of the menu item.",
+            "example": "พร้อมขาย",
+            "maxLength": 20
+          },
+          "menuCategory": {
+            "type": "string",
+            "description": "Category of the menu item.",
+            "example": "กาแฟ",
+            "maxLength": 20
+          },
+          "menuDescription": {
+            "type": "string",
+            "description": "Brief description (e.g., hot/cold).",
+            "example": "เย็น",
+            "maxLength": 10
+          },
+          "menuUrl": {
+            "type": "string",
+            "format": "url",
+            "description": "URL to the menu item's image.",
+            "example": "https://example.com/latte.jpg",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "menuId",
+          "menuName",
+          "menuPrice",
+          "menuStatus",
+          "menuCategory"
+        ]
+      },
+      "MenuCreate": {
+        "type": "object",
+        "properties": {
+          "menuName": {
+            "type": "string",
+            "example": "คาปูชิโน"
+          },
+          "menuPrice": {
+            "type": "number",
+            "format": "float",
+            "example": 60
+          },
+          "menuStatus": {
+            "type": "string",
+            "example": "พร้อมขาย"
+          },
+          "menuCategory": {
+            "type": "string",
+            "example": "กาแฟ"
+          },
+          "menuDescription": {
+            "type": "string",
+            "example": "ร้อน"
+          },
+          "menuUrl": {
+            "type": "string",
+            "format": "url"
+          },
+          "defaultRecipe": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DefaultRecipeCreateItem"
+            }
+          }
+        },
+        "required": [
+          "menuName",
+          "menuPrice",
+          "menuStatus",
+          "menuCategory",
+          "defaultRecipe"
+        ]
+      },
+      "MenuUpdate": {
+        "type": "object",
+        "properties": {
+          "menuName": {
+            "type": "string"
+          },
+          "menuPrice": {
+            "type": "number",
+            "format": "float"
+          },
+          "menuStatus": {
+            "type": "string"
+          },
+          "menuCategory": {
+            "type": "string"
+          },
+          "menuDescription": {
+            "type": "string"
+          },
+          "menuUrl": {
+            "type": "string",
+            "format": "url"
+          },
+          "defaultRecipe": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DefaultRecipeCreateItem"
+            }
+          }
+        }
+      },
+      "Ingredient": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "description": "Unique ID for the ingredient.",
+            "example": "I985630000",
+            "maxLength": 10,
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the ingredient.",
+            "example": "นมอัลมอนด์",
+            "maxLength": 50
+          },
+          "quantity": {
+            "type": "number",
+            "format": "float",
+            "description": "Current quantity in stock.",
+            "example": 9632.23
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement.",
+            "example": "กิโลกรัม",
+            "maxLength": 10
+          },
+          "adjustmentPrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Base cost for customization/adjustment.",
+            "example": 5
+          },
+          "costPerUnit": {
+            "type": "number",
+            "format": "float",
+            "description": "Cost per unit of the ingredient.",
+            "example": 50.5
+          },
+          "category": {
+            "type": "string",
+            "description": "Category ID the ingredient belongs to.",
+            "example": "IC98563000"
+          }
+        },
+        "required": [
+          "ingredientId",
+          "name",
+          "quantity",
+          "unit",
+          "costPerUnit",
+          "category"
+        ]
+      },
+      "IngredientCreate": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "I985630001"
+          },
+          "name": {
+            "type": "string",
+            "example": "เมล็ดกาแฟอาราบิก้า"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "float",
+            "example": 10000
+          },
+          "unit": {
+            "type": "string",
+            "example": "กรัม"
+          },
+          "adjustmentPrice": {
+            "type": "number",
+            "format": "float",
+            "example": 0
+          },
+          "costPerUnit": {
+            "type": "number",
+            "format": "float",
+            "example": 0.75
+          },
+          "category": {
+            "type": "string",
+            "example": "IC10000000"
+          }
+        },
+        "required": ["name", "quantity", "unit", "costPerUnit", "category"]
+      },
+      "IngredientUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "float"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "adjustmentPrice": {
+            "type": "number",
+            "format": "float"
+          },
+          "costPerUnit": {
+            "type": "number",
+            "format": "float"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      },
+      "IngredientCategory": {
+        "type": "object",
+        "properties": {
+          "ingredientCategoryId": {
+            "type": "string",
+            "description": "Unique ID for the ingredient category.",
+            "example": "IC98563000",
+            "maxLength": 10,
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the category.",
+            "example": "นม",
+            "maxLength": 50
+          },
+          "allowMultipleSelection": {
+            "type": "boolean",
+            "description": "Whether multiple ingredients from this category can be selected as replacements/additions.",
+            "example": false
+          },
+          "isCustomizable": {
+            "type": "boolean",
+            "description": "Whether ingredients in this category are typically used for customization.",
+            "example": true
+          }
+        },
+        "required": [
+          "ingredientCategoryId",
+          "name",
+          "allowMultipleSelection",
+          "isCustomizable"
+        ]
+      },
+      "DefaultRecipe": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "description": "ID of the ingredient used.",
+            "example": "I98563"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "float",
+            "description": "Quantity of the ingredient used in the default recipe.",
+            "example": 50
+          },
+          "isBaseIngredient": {
+            "type": "boolean",
+            "description": "Is this a core/base ingredient?",
+            "example": true
+          },
+          "isReplaceable": {
+            "type": "boolean",
+            "description": "Can this ingredient be replaced by customization?",
+            "example": true
+          }
+        },
+        "required": [
+          "ingredientId",
+          "quantity",
+          "isBaseIngredient",
+          "isReplaceable"
+        ]
+      },
+      "DefaultRecipeCreateItem": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "I98563"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "float",
+            "example": 50
+          },
+          "isBaseIngredient": {
+            "type": "boolean",
+            "example": true
+          },
+          "isReplaceable": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "ingredientId",
+          "quantity",
+          "isBaseIngredient",
+          "isReplaceable"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "description": "Unique ID for the order.",
+            "example": "O265980000",
+            "maxLength": 10,
+            "readOnly": true
+          },
+          "orderDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the order was created (UTC+7 in example).",
+            "example": "2024-03-21T00:18:00+07:00",
+            "readOnly": true
+          },
+          "orderStatus": {
+            "type": "boolean",
+            "description": "Status of the order (false = pending payment, true = paid).",
+            "example": false
+          },
+          "orderPrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Total calculated price for the order.",
+            "example": 195,
+            "readOnly": true
+          },
+          "orderMakerEmpId": {
+            "type": "string",
+            "description": "Employee ID of the staff member who took the order.",
+            "example": "6609696969",
+            "maxLength": 10
+          },
+          "orderByCitizenId": {
+            "type": "string",
+            "description": "Citizen ID of the customer who placed the order (optional).",
+            "example": "1266985663999",
+            "pattern": "^\\d{13}$",
+            "nullable": true
+          },
+          "orderItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          }
+        },
+        "required": [
+          "orderId",
+          "orderDateTime",
+          "orderStatus",
+          "orderPrice",
+          "orderMakerEmpId",
+          "orderItems"
+        ]
+      },
+      "OrderCreate": {
+        "type": "object",
+        "properties": {
+          "orderMakerEmpId": {
+            "type": "string",
+            "example": "6609696969"
+          },
+          "orderByCitizenId": {
+            "type": "string",
+            "example": "1266985663999",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "description": "List of items being ordered.",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemCreate"
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["orderMakerEmpId", "items"]
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "description": "Unique ID for this specific item within an order.",
+            "example": "OI26598000",
+            "readOnly": true
+          },
+          "menuId": {
+            "type": "string",
+            "description": "ID of the menu item ordered.",
+            "example": "M213560000"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Number of this menu item ordered.",
+            "example": 2
+          },
+          "note": {
+            "type": "string",
+            "description": "Customer notes or requests for this item.",
+            "example": "Extra hot",
+            "maxLength": 100,
+            "nullable": true
+          },
+          "itemBasePrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Base price of the menu item at the time of order.",
+            "example": 55,
+            "readOnly": true
+          },
+          "customizeCost": {
+            "type": "number",
+            "format": "float",
+            "description": "Total additional cost from customizations for this item * quantity.",
+            "example": 20,
+            "readOnly": true
+          },
+          "itemTotalPrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Total price for this line item ( (BasePrice + CustomizeCost/Quantity) * Quantity ).",
+            "example": 130,
+            "readOnly": true
+          },
+          "customizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomIngredientDetail"
+            }
+          }
+        },
+        "required": [
+          "orderItemId",
+          "menuId",
+          "quantity",
+          "itemBasePrice",
+          "customizeCost",
+          "itemTotalPrice"
+        ]
+      },
+      "OrderItemCreate": {
+        "type": "object",
+        "properties": {
+          "menuId": {
+            "type": "string",
+            "example": "M213560000"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 2
+          },
+          "note": {
+            "type": "string",
+            "example": "Use Almond Milk",
+            "nullable": true
+          },
+          "customizations": {
+            "type": "array",
+            "description": "List of ingredient customizations for this item.",
+            "items": {
+              "$ref": "#/components/schemas/CustomIngredientInput"
+            },
+            "nullable": true
+          }
+        },
+        "required": ["menuId", "quantity"]
+      },
+      "CustomIngredientInput": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "I985630000"
+          }
+        },
+        "required": ["ingredientId"]
+      },
+      "CustomIngredientDetail": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "I985630000"
+          },
+          "customizationCostApplied": {
+            "type": "number",
+            "format": "float",
+            "example": 10
+          }
+        },
+        "required": ["ingredientId", "customizationCostApplied"]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained via /auth/login endpoint. Include as Authorization: Bearer <token>"
+      }
+    }
+  }
+}
