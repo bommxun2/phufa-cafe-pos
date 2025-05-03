@@ -15,7 +15,7 @@ router.put('/:customerId', updateCustomerController);
 
 const collectPointController = require('../controllers/customer/collectPoint.controller');
 
-// Route: POST /api/customers/collect-point
-router.post('/collect-point', collectPointController);
+// Route: POST /:customerId/point
+router.post('/:customerId/points', collectPointController);
 
 module.exports = router;
