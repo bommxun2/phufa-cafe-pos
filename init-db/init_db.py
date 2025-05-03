@@ -48,13 +48,6 @@ try:
                 ON DELETE CASCADE ON UPDATE CASCADE
         ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'ข้อมูลลูกค้าและคะแนนสะสม';""",
 
-        """CREATE TABLE IF NOT EXISTS MenuCategory (
-            CategoryID VARCHAR(10) NOT NULL COMMENT 'รหัสประเภทเมนู',
-            CategoryName VARCHAR(50) NOT NULL UNIQUE COMMENT 'ชื่อประเภทเมนู (เช่น กาแฟ, ชา, ของหวาน)',
-            CategoryStatus VARCHAR(20) NOT NULL DEFAULT 'Active' COMMENT 'สถานะ (เช่น Active, Inactive)',
-            PRIMARY KEY (CategoryID)
-        ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'หมวดหมู่ของเมนู';""",
-
         """CREATE TABLE IF NOT EXISTS Menu (
             MenuID VARCHAR(10) NOT NULL COMMENT 'รหัสเมนู',
             MenuName VARCHAR(100) NOT NULL UNIQUE COMMENT 'ชื่อเมนู',
@@ -62,11 +55,8 @@ try:
             MenuDescription VARCHAR(255) COMMENT 'คำอธิบายเมนู',
             MenuStatus VARCHAR(20) NOT NULL DEFAULT 'พร้อมขาย' COMMENT 'สถานะเมนู (เช่น พร้อมขาย, หมด, ไม่พร้อมขาย)',
             MenuURL VARCHAR(255) COMMENT 'URL รูปภาพเมนู',
-            CategoryID VARCHAR(10) NOT NULL COMMENT 'FK อ้างอิง MenuCategory',
-            PRIMARY KEY (MenuID),
-            CONSTRAINT fk_menu_menucategory FOREIGN KEY (CategoryID) REFERENCES MenuCategory(CategoryID)
-                ON DELETE RESTRICT ON UPDATE CASCADE,
-            INDEX idx_menu_category (CategoryID)
+            MenuCategory VARCHAR(10) NOT NULL COMMENT 'ประเภทของ menu',
+            PRIMARY KEY (MenuID)
         ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'รายการอาหารและเครื่องดื่ม';""",
 
         """CREATE TABLE IF NOT EXISTS IngredientCategory (
