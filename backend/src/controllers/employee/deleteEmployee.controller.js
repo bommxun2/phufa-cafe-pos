@@ -111,21 +111,6 @@ const deleteEmployee = async (req, res, next) => {
                  throw new Error(`Failed to delete employee record for EmpID ${empId}. No rows affected.`);
             }
 
-            // 5.2 ลบจากตาราง Person 
-            const deletePersonResult = await connection.query(
-                'DELETE FROM Person WHERE CitizenID = ?',
-                [citizenIdToDelete]
-            );
-            
-            if (!deletePersonResult || typeof deletePersonResult !== 'object') {
-                 await connection.rollback();
-                 throw new Error('Unexpected result type from DELETE Person query.');
-            }
-            if (deletePersonResult.affectedRows === 0) {
-                 await connection.rollback();
-                 throw new Error(`CRITICAL: Failed to delete person record for CitizenID ${citizenIdToDelete} after employee was deleted.`);
-            }
-
             // 6. Commit Transaction
             await connection.commit();
 
