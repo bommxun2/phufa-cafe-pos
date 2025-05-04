@@ -8,11 +8,13 @@ dotenv.config({path: '.env'});
 const app = express();
 const port = process.env.PORT || 3000;
 
+const errorHandlerMiddleware = require("./middlewares/errorServer.middleware");
 const orderRoutes = require("./routes/order.route");
 const reportsRouter = require('./routes/report.route');
 const employeesRouter = require('./routes/employee.route');
 const customerRouter = require('./routes/customer.route');
 const menuRoutes = require("./routes/menu.route");
+const errorNotFoundMiddleware = require("./middlewares/errorNotFound.middleware");
 
 app.use(express.json());
 
@@ -32,6 +34,9 @@ app.get("/", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use(errorNotFoundMiddleware)
+app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
   console.log(`Backend service listening on port ${port}`);
