@@ -271,6 +271,84 @@
         ]
       }
     },
+    "/menu/category/{categoryName}": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "List Menu Items by Category",
+        "description": "Retrieves a list of all available menu items belonging to a specific category.",
+        "parameters": [
+          {
+            "name": "categoryName",
+            "in": "path",
+            "required": true,
+            "description": "The name of the category to retrieve menu items for.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "กาแฟ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of menu items for the specified category.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Authentication required."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Category 'เครื่องดื่มพิเศษ' not found."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "An unexpected error occurred while retrieving menus for the category."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/menu/{menuId}": {
       "get": {
         "tags": ["Menu"],
@@ -2804,8 +2882,7 @@
             "type": "string",
             "description": "Unique 13-digit National ID number. Primary Key for Person.",
             "example": "1266985663999",
-            "pattern": "^\\d{13}$",
-            "readOnly": true
+            "pattern": "^\\d{13}$"
           },
           "firstname": {
             "type": "string",
@@ -2845,7 +2922,12 @@
             "maxLength": 100
           }
         },
-        "required": ["firstname", "lastname", "phoneNum"]
+        "required": [
+          "citizenId",
+          "firstname",
+          "lastname",
+          "phoneNum"
+        ]
       },
       "Employee": {
         "allOf": [
@@ -2875,7 +2957,11 @@
                 "example": 25000
               }
             },
-            "required": ["empId", "empRole", "empSalary"]
+            "required": [
+              "empId",
+              "empRole",
+              "empSalary"
+            ]
           }
         ]
       },
@@ -2924,6 +3010,7 @@
       },
       "EmployeeUpdate": {
         "type": "object",
+        "description": "Fields that can be updated for an employee. citizenId and empId are typically not updatable.",
         "properties": {
           "firstname": {
             "type": "string",
@@ -2975,7 +3062,9 @@
                 "readOnly": true
               }
             },
-            "required": ["point"]
+            "required": [
+              "point"
+            ]
           }
         ]
       },
@@ -2985,10 +3074,13 @@
             "$ref": "#/components/schemas/PersonBase"
           }
         ],
-        "required": ["citizenId"]
+        "required": [
+          "citizenId"
+        ]
       },
       "CustomerUpdate": {
         "type": "object",
+        "description": "Fields that can be updated for a customer. citizenId is typically not updatable.",
         "properties": {
           "firstname": {
             "type": "string",
