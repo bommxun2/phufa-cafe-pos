@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 
-const menuValidator = [
+const createMenuValidator = [
   body("menuName").isString().notEmpty(),
   body("menuPrice").isFloat({ gt: 0 }),
   body("menuStatus").isIn(["พร้อมขาย", "ไม่พร้อมขาย"]),
@@ -14,4 +14,18 @@ const menuValidator = [
   body("defaultRecipe.*.isReplaceable").isBoolean(),
 ];
 
-module.exports = menuValidator;
+const updateMenuValidator = [
+  body("menuName").optional().isString().notEmpty(),
+  body("menuPrice").optional().isFloat({ gt: 0 }),
+  body("menuStatus").optional().isIn(["พร้อมขาย", "ไม่พร้อมขาย"]),
+  body("menuCategory").optional().isString().notEmpty(),
+  body("menuDescription").optional().isString(),
+  body("menuUrl").optional().isURL(),
+  body("defaultRecipe").optional().isArray({ min: 1 }),
+  body("defaultRecipe.*.ingredientId").optional().isString().notEmpty(),
+  body("defaultRecipe.*.quantity").optional().isFloat({ gt: 0 }),
+  body("defaultRecipe.*.isBaseIngredient").optional().isBoolean(),
+  body("defaultRecipe.*.isReplaceable").optional().isBoolean(),
+];
+
+module.exports = { createMenuValidator, updateMenuValidator };

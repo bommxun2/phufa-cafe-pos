@@ -2,7 +2,7 @@ const pool = require("../../utils/database");
 const { validationResult } = require("express-validator");
 
 const createMenu = async (req, res) => {
-  const { menu } = req.body;
+  const menu = req.body;
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -13,7 +13,7 @@ const createMenu = async (req, res) => {
 
   var conn;
   try {
-    const getMenuPk = `SELECT ISNULL(MAX(MenuId), 0) FROM Menu);`;
+    const getMenuPk = `SELECT IFNULL(MAX(MenuId), 0) AS menuId FROM Menu;`;
 
     const insertMenu = `
     INSERT INTO Menu (MenuId, MenuName, MenuPrice, MenuStatus, MenuDescription, MenuURL, MenuCategory)
@@ -29,29 +29,30 @@ const createMenu = async (req, res) => {
     await conn.beginTransaction();
 
     // Increase PK
-    let id = await conn.query(getMenuPk);
-    if (id == 0) {
-      id = "M000000001";
+    let [results] = await conn.query(getMenuPk);
+    let menuId;
+    if (results.menuId == 0) {
+      menuId = "M000000001";
     } else {
-      const prefix = id.slice(0, 1);
-      const number = parseInt(id.slice(1));
+      const prefix = results.menuId.slice(0, 1);
+      const number = parseInt(results.menuId.slice(1));
 
       const newNumber = number + 1;
       const padded = String(newNumber).padStart(9, "0");
 
-      id = prefix + padded;
+      menuId = prefix + padded;
     }
 
     let result = await conn.query(insertMenu, [
+      menuId,
       menu.menuName,
       menu.menuPrice,
       menu.menuStatus,
       menu.menuDescription,
-      menu.menuURL,
+      menu.menuUrl,
       menu.menuCategory,
     ]);
 
-    const menuId = result.insertId;
     for (const recipe of menu.defaultRecipe) {
       await conn.query(insertDefaultRecipe, [
         menuId,
@@ -63,8 +64,6 @@ const createMenu = async (req, res) => {
     }
 
     await conn.commit();
-    conn.release();
-
     return res.status(201).json({
       menuId: menuId,
       menuName: menu.menuName,
@@ -72,14 +71,15 @@ const createMenu = async (req, res) => {
       menuStatus: menu.menuStatus,
       menuCategory: menu.menuCategory,
       menuDescription: menu.menuDescription,
-      menuUrl: menu.menuURL,
+      menuUrl: menu.menuUrl,
     });
   } catch (err) {
-    if (conn) {
-      await conn.rollback();
-      conn.release();
-    }
+    await conn.rollback();
+
+    console.log(err);
     return res.status(500).json({ error: "Internal Server Error." });
+  } finally {
+    await conn.release();
   }
 };
 

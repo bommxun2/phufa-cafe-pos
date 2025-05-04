@@ -2,8 +2,8 @@ const pool = require("../../utils/database");
 const { validationResult } = require("express-validator");
 
 const updateMenu = async (req, res) => {
-  const { menu } = req.body;
-  const menuId = req.params("menuId");
+  const menu = req.body;
+  const { menuId } = req.params;
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -12,52 +12,55 @@ const updateMenu = async (req, res) => {
     });
   }
 
+  var conn;
   try {
     const updateMenu = `
-    UPDATES Menu
+    UPDATE Menu
     SET 
       MenuName = ?, 
       MenuPrice = ?, 
       MenuURL = ?, 
       MenuStatus = ?, 
       MenuCategory = ?, 
-      MenuDescription = ?, 
+      MenuDescription = ?
     WHERE MenuID = ?;
     `;
 
     const updateDefaultRecipe = `
-    UPDATES DefaultRecipe
+    UPDATE DefaultRecipe
     SET
       Quantity = ?, 
       IsBaseIngredient = ?, 
       IsReplaceable = ?
-    WHERE MenuID = ? AND IngredientId = ?
+    WHERE MenuID = ? AND IngredientID = ?;
     `;
 
-    const conn = pool.getConnection();
+    conn = await pool.getConnection();
     await conn.beginTransaction();
 
     await conn.query(updateMenu, [
       menu.menuName,
       menu.menuPrice,
-      menu.menuURL,
+      menu.menuUrl,
       menu.menuStatus,
       menu.menuCategory,
       menu.menuDescription,
       menuId,
     ]);
 
-    for (const recipe of menu.defaultRecipe) {
-      await conn.query(updateDefaultRecipe, [
-        recipe.quantity,
-        recipe.isReplaceable,
-        recipe.isBaseIngredient,
-      ]);
+    if (menu.defaultRecipe) {
+      for (const recipe of menu.defaultRecipe) {
+        await conn.query(updateDefaultRecipe, [
+          recipe.quantity,
+          recipe.isReplaceable,
+          recipe.isBaseIngredient,
+          menuId,
+          recipe.ingredientId,
+        ]);
+      }
     }
 
     await conn.commit();
-    conn.release();
-
     return res.status(201).json({
       menuId: menuId,
       menuName: menu.menuName,
@@ -65,14 +68,15 @@ const updateMenu = async (req, res) => {
       menuStatus: menu.menuStatus,
       menuCategory: menu.menuCategory,
       menuDescription: menu.menuDescription,
-      menuUrl: menu.menuURL,
+      menuUrl: menu.menuUrl,
     });
   } catch (err) {
-    if (conn) {
-      await conn.rollback();
-      conn.release();
-    }
+    await conn.rollback();
+
+    console.log(err);
     return res.status(500).json({ error: "Internal Server Error." });
+  } finally {
+    await conn.release();
   }
 };
 
