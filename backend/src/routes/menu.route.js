@@ -7,8 +7,8 @@ const {
 } = require("../middlewares/menuValidator.middleware");
 const createMenu = require("../controllers/menu/createMenu.controller");
 const updateMenu = require("../controllers/menu/updateMenu.controller");
-const updateMenuStatus = require("../controllers/menu/updateMenuItemStatus.controller");
-const getMenuByCategory = require("../controllers/menu/showMenuItemsByCategory.controller");
+const updateMenuStatus = require('../controllers/menu/updateMenuStatus.controller')
+const getMenuByCategory = require('../controllers/menu/getMenuByCategory.controller')
 
 router.get("/", getMenuByCategory);
 router.post("/", createMenuValidator, createMenu);
