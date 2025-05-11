@@ -22,7 +22,7 @@ app.use(express.json());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/order', orderRoutes);
+app.use('/orders', orderRoutes);
 app.use('/reports', reportsRouter);
 app.use('/employees', employeesRouter);
 app.use('/customers', customerRouter);
