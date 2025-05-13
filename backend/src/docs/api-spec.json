@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Phufa Cafe POS API",
-    "description": "API for managing the Phufa Café Point of Sale system, including menus, ingredients, orders, customers, and employees.",
+    "description": "API for managing the Phufa Café Point of Sale system, including menus, ingredients, orders, customers, employees, and file uploads.",
     "contact": {
       "name": "Phufa Cafe Dev Team (Group 15)"
     },
@@ -50,6 +50,10 @@
     {
       "name": "Authentication",
       "description": "Operations for user login."
+    },
+    {
+      "name": "Uploads",
+      "description": "Operations related to file uploads."
     }
   ],
   "paths": {
@@ -138,19 +142,8 @@
       "get": {
         "tags": ["Menu"],
         "summary": "List All Menu Items",
-        "description": "Retrieves a list of all available menu items, optionally filtered by category.",
-        "parameters": [
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "description": "Filter menu items by category name.",
-            "schema": {
-              "type": "string"
-            },
-            "example": "กาแฟ"
-          }
-        ],
+        "description": "Retrieves a list of all available menu items, optionally filtered by category name.",
+        "parameters": [],
         "responses": {
           "200": {
             "description": "A list of menu items.",
@@ -165,19 +158,7 @@
               }
             }
           },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving menu items."
-                }
-              }
-            }
-          }
+          "500": {"$ref": "#/components/responses/InternalServerError"}
         },
         "security": [
           {
@@ -224,44 +205,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to add menu items."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorMenu"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while creating the menu item."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorMenuCreate"
           }
         },
         "security": [
@@ -274,8 +221,8 @@
     "/menu/category/{categoryName}": {
       "get": {
         "tags": ["Menu"],
-        "summary": "List Menu Items by Category",
-        "description": "Retrieves a list of all available menu items belonging to a specific category.",
+        "summary": "List Menu Items by Category Name",
+        "description": "Retrieves a list of all available menu items belonging to a specific category name.",
         "parameters": [
           {
             "name": "categoryName",
@@ -302,44 +249,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Category 'เครื่องดื่มพิเศษ' not found."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/CategoryNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving menus for the category."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorMenuCategory"
           }
         },
         "security": [
@@ -377,45 +290,9 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Menu item not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Menu item with ID 'M213560000' not found."
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the menu item."
-                }
-              }
-            }
-          }
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/MenuItemNotFoundError"},
+          "500": {"$ref": "#/components/responses/InternalServerErrorMenuGet"}
         },
         "security": [
           {
@@ -461,70 +338,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid menu update data provided."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to update menu items."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Menu item not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Menu item with ID 'M213560000' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestMenuUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorMenu"},
+          "404": {"$ref": "#/components/responses/MenuItemNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating the menu item."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorMenuUpdate"
           }
         },
         "security": [
@@ -579,70 +398,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid status value provided."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to update menu status."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Menu item not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Menu item with ID 'M213560000' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestMenuStatusUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorMenu"},
+          "404": {"$ref": "#/components/responses/MenuItemNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating menu status."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorMenuStatusUpdate"
           }
         },
         "security": [
@@ -668,60 +429,12 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Menu item deleted successfully."
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to delete menu items."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Menu item not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Menu item with ID 'M213560000' not found."
-                }
-              }
-            }
-          },
+          "204": {"description": "Menu item deleted successfully."},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorMenu"},
+          "404": {"$ref": "#/components/responses/MenuItemNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while deleting the menu item."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorMenuDelete"
           }
         },
         "security": [
@@ -762,45 +475,9 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Menu item not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Menu item or recipe for ID 'M213560000' not found."
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the recipe."
-                }
-              }
-            }
-          }
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/MenuOrRecipeNotFoundError"},
+          "500": {"$ref": "#/components/responses/InternalServerErrorRecipeGet"}
         },
         "security": [
           {
@@ -828,31 +505,9 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving ingredients."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientsGet"
           }
         },
         "security": [
@@ -887,57 +542,11 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data or duplicate ID.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid ingredient data or ingredient ID already exists."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to add ingredients."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestIngredientCreate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorIngredient"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while adding the ingredient."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientCreate"
           }
         },
         "security": [
@@ -975,44 +584,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Ingredient not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Ingredient with ID 'I985630000' not found."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/IngredientNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the ingredient."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientGet"
           }
         },
         "security": [
@@ -1059,70 +634,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid ingredient update data provided."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to update ingredients."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Ingredient not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Ingredient with ID 'I985630000' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestIngredientUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorIngredient"},
+          "404": {"$ref": "#/components/responses/IngredientNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating the ingredient."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientUpdate"
           }
         },
         "security": [
@@ -1148,73 +665,13 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Ingredient deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request - Cannot delete ingredient due to dependencies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Cannot delete ingredient 'I985630000' as it is used in existing recipes or orders."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient privileges.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to delete ingredients."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Ingredient not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Ingredient with ID 'I985630000' not found."
-                }
-              }
-            }
-          },
+          "204": {"description": "Ingredient deleted successfully."},
+          "400": {"$ref": "#/components/responses/BadRequestIngredientDelete"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorIngredient"},
+          "404": {"$ref": "#/components/responses/IngredientNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while deleting the ingredient."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientDelete"
           }
         },
         "security": [
@@ -1243,31 +700,55 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorIngredientCategoriesGet"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/ingredient-categories/{ingredientCategoryId}/ingredients": {
+      "get": {
+        "tags": ["Ingredient"],
+        "summary": "List Ingredients by Category ID",
+        "description": "Retrieves all ingredients belonging to a specific ingredient category by its ID.",
+        "parameters": [
+          {
+            "name": "ingredientCategoryId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the ingredient category.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "IC98563000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of ingredients for the specified category.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ingredient"
+                  }
                 }
               }
             }
           },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {
+            "$ref": "#/components/responses/IngredientCategoryNotFoundError"
+          },
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving ingredient categories."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorIngredientsForCategoryGet"
           }
         },
         "security": [
@@ -1316,45 +797,9 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to list all orders."
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving orders."
-                }
-              }
-            }
-          }
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorOrderList"},
+          "500": {"$ref": "#/components/responses/InternalServerErrorOrderList"}
         },
         "security": [
           {
@@ -1388,44 +833,10 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input, insufficient stock, etc.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid order data. Check items, quantities, or ingredient stock."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestOrderCreate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while creating the order."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorOrderCreate"
           }
         },
         "security": [
@@ -1463,45 +874,9 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Order not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Order with ID 'O265980000' not found."
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the order."
-                }
-              }
-            }
-          }
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/OrderNotFoundError"},
+          "500": {"$ref": "#/components/responses/InternalServerErrorOrderGet"}
         },
         "security": [
           {
@@ -1555,57 +930,11 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid status transition or other error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid order status update."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Order not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Order with ID 'O265980000' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestOrderStatusUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/OrderNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating the order status."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorOrderStatusUpdate"
           }
         },
         "security": [
@@ -1631,73 +960,13 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Order deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request - Cannot delete a paid order.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Cannot delete order 'O265980000' because it has already been paid."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Insufficient privileges to delete this order."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Order not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Order with ID 'O265980000' not found."
-                }
-              }
-            }
-          },
+          "204": {"description": "Order deleted successfully."},
+          "400": {"$ref": "#/components/responses/BadRequestOrderDelete"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorOrderDelete"},
+          "404": {"$ref": "#/components/responses/OrderNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while deleting the order."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorOrderDelete"
           }
         },
         "security": [
@@ -1726,44 +995,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to list employees."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorEmployeeList"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving employees."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeList"
           }
         },
         "security": [
@@ -1798,57 +1033,13 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input or duplicate ID/CitizenID.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid employee data or duplicate Employee ID/Citizen ID."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestEmployeeCreate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to add employees."
-                }
-              }
-            }
+            "$ref": "#/components/responses/ForbiddenErrorEmployeeCreate"
           },
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while creating the employee."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeCreate"
           }
         },
         "security": [
@@ -1886,57 +1077,11 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Access denied. You can only view your own profile or require admin privileges."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Employee not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Employee with ID '6609696969' not found."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorEmployeeGet"},
+          "404": {"$ref": "#/components/responses/EmployeeNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the employee."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeGet"
           }
         },
         "security": [
@@ -1983,70 +1128,14 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid employee update data provided."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestEmployeeUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to update employees."
-                }
-              }
-            }
+            "$ref": "#/components/responses/ForbiddenErrorEmployeeUpdate"
           },
-          "404": {
-            "description": "Employee not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Employee with ID '6609696969' not found."
-                }
-              }
-            }
-          },
+          "404": {"$ref": "#/components/responses/EmployeeNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating the employee."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeUpdate"
           }
         },
         "security": [
@@ -2072,73 +1161,15 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Employee deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request - Cannot delete employee (e.g., active orders).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Cannot delete employee '6609696969' due to existing dependencies (e.g., orders)."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "204": {"description": "Employee deleted successfully."},
+          "400": {"$ref": "#/components/responses/BadRequestEmployeeDelete"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to delete employees."
-                }
-              }
-            }
+            "$ref": "#/components/responses/ForbiddenErrorEmployeeDelete"
           },
-          "404": {
-            "description": "Employee not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Employee with ID '6609696969' not found."
-                }
-              }
-            }
-          },
+          "404": {"$ref": "#/components/responses/EmployeeNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while deleting the employee."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeDelete"
           }
         },
         "security": [
@@ -2179,57 +1210,13 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "403": {
-            "description": "Forbidden (if not admin or self).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Access denied. You can only view your own orders or require admin privileges."
-                }
-              }
-            }
+            "$ref": "#/components/responses/ForbiddenErrorEmployeeOrderGet"
           },
-          "404": {
-            "description": "Employee not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Employee with ID '6609696969' not found."
-                }
-              }
-            }
-          },
+          "404": {"$ref": "#/components/responses/EmployeeNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving employee orders."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorEmployeeOrderGet"
           }
         },
         "security": [
@@ -2258,44 +1245,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to list customers."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorCustomerList"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving customers."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerList"
           }
         },
         "security": [
@@ -2330,44 +1283,10 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input or duplicate CitizenID/Phone.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid customer data or duplicate Citizen ID/Phone number."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestCustomerCreate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while creating the customer."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerCreate"
           }
         },
         "security": [
@@ -2406,44 +1325,10 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Customer not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Customer with Citizen ID '1266985663999' not found."
-                }
-              }
-            }
-          },
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/CustomerNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while retrieving the customer."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerGet"
           }
         },
         "security": [
@@ -2491,57 +1376,11 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid input data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid customer update data provided."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Customer not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Customer with Citizen ID '1266985663999' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestCustomerUpdate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/CustomerNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while updating the customer."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerUpdate"
           }
         },
         "security": [
@@ -2607,57 +1446,11 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid points value.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid value for pointsToAdd. Must be a positive integer."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Customer not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Customer with Citizen ID '1266985663999' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestCustomerPointsAdd"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/CustomerNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while adding points."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerPointsAdd"
           }
         },
         "security": [
@@ -2708,57 +1501,11 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Insufficient points (less than 10).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Insufficient points. Requires 10 points to redeem."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Customer not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Customer with Citizen ID '1266985663999' not found."
-                }
-              }
-            }
-          },
+          "400": {"$ref": "#/components/responses/BadRequestCustomerRedeem"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "404": {"$ref": "#/components/responses/CustomerNotFoundError"},
           "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while redeeming points."
-                }
-              }
-            }
+            "$ref": "#/components/responses/InternalServerErrorCustomerRedeem"
           }
         },
         "security": [
@@ -2812,64 +1559,123 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Invalid date format.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid date format. Please use YYYY-MM-DD."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Authentication required."
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Admin or owner privileges required to access reports."
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "An unexpected error occurred while generating the daily income report."
-                }
-              }
-            }
-          }
+          "400": {"$ref": "#/components/responses/BadRequestReportDate"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenErrorReport"},
+          "500": {"$ref": "#/components/responses/InternalServerErrorReport"}
         },
         "security": [
           {
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/uploads/profile-image": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Upload Profile Image",
+        "description": "Uploads a profile image (e.g., for an employee or customer). Returns the relative URL of the uploaded image.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "profileImage": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The profile image file to upload (e.g., JPG, PNG)."
+                  }
+                },
+                "required": ["profileImage"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Profile image uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "File uploaded successfully."
+                    },
+                    "fileUrl": {
+                      "type": "string",
+                      "format": "uri-relative",
+                      "description": "Relative URL path to the uploaded profile image.",
+                      "example": "/uploads/profiles/unique-filename.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/FileUploadBadRequest"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "500": {"$ref": "#/components/responses/InternalServerError"}
+        },
+        "security": [{"bearerAuth": []}]
+      }
+    },
+    "/uploads/menu-image": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Upload Menu Item Image",
+        "description": "Uploads an image for a menu item. Returns the relative URL of the uploaded image. Requires admin/owner privileges.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "menuImage": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The menu item image file to upload (e.g., JPG, PNG)."
+                  }
+                },
+                "required": ["menuImage"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu image uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "File uploaded successfully."
+                    },
+                    "fileUrl": {
+                      "type": "string",
+                      "format": "uri-relative",
+                      "description": "Relative URL path to the uploaded menu image.",
+                      "example": "/uploads/menus/unique-menu-filename.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/FileUploadBadRequest"},
+          "401": {"$ref": "#/components/responses/UnauthorizedError"},
+          "403": {"$ref": "#/components/responses/ForbiddenError"},
+          "500": {"$ref": "#/components/responses/InternalServerError"}
+        },
+        "security": [{"bearerAuth": []}]
       }
     }
   },
@@ -2916,18 +1722,13 @@
           },
           "profileUrl": {
             "type": "string",
-            "format": "url",
-            "description": "URL to the person's profile picture.",
-            "example": "https://example.com/image.jpg",
-            "maxLength": 100
+            "format": "uri-relative",
+            "description": "Relative URL to the person's profile picture (e.g., /uploads/profiles/image.jpg).",
+            "example": "/uploads/profiles/image.jpg",
+            "maxLength": 255
           }
         },
-        "required": [
-          "citizenId",
-          "firstname",
-          "lastname",
-          "phoneNum"
-        ]
+        "required": ["citizenId", "firstname", "lastname", "phoneNum"]
       },
       "Employee": {
         "allOf": [
@@ -2957,11 +1758,7 @@
                 "example": 25000
               }
             },
-            "required": [
-              "empId",
-              "empRole",
-              "empSalary"
-            ]
+            "required": ["empId", "empRole", "empSalary"]
           }
         ]
       },
@@ -3034,7 +1831,7 @@
           },
           "profileUrl": {
             "type": "string",
-            "format": "url"
+            "format": "uri-relative"
           },
           "empRole": {
             "type": "string",
@@ -3062,9 +1859,7 @@
                 "readOnly": true
               }
             },
-            "required": [
-              "point"
-            ]
+            "required": ["point"]
           }
         ]
       },
@@ -3074,9 +1869,7 @@
             "$ref": "#/components/schemas/PersonBase"
           }
         ],
-        "required": [
-          "citizenId"
-        ]
+        "required": ["citizenId"]
       },
       "CustomerUpdate": {
         "type": "object",
@@ -3104,7 +1897,7 @@
           },
           "profileUrl": {
             "type": "string",
-            "format": "url"
+            "format": "uri-relative"
           }
         }
       },
@@ -3138,7 +1931,7 @@
           },
           "menuCategory": {
             "type": "string",
-            "description": "Category of the menu item.",
+            "description": "Category name of the menu item.",
             "example": "กาแฟ",
             "maxLength": 20
           },
@@ -3150,10 +1943,10 @@
           },
           "menuUrl": {
             "type": "string",
-            "format": "url",
-            "description": "URL to the menu item's image.",
-            "example": "https://example.com/latte.jpg",
-            "maxLength": 100
+            "format": "uri-relative",
+            "description": "Relative URL to the menu item's image (e.g., /uploads/menus/latte.jpg).",
+            "example": "/uploads/menus/latte.jpg",
+            "maxLength": 255
           }
         },
         "required": [
@@ -3182,6 +1975,7 @@
           },
           "menuCategory": {
             "type": "string",
+            "description": "Category name of the menu item.",
             "example": "กาแฟ"
           },
           "menuDescription": {
@@ -3190,7 +1984,7 @@
           },
           "menuUrl": {
             "type": "string",
-            "format": "url"
+            "format": "uri-relative"
           },
           "defaultRecipe": {
             "type": "array",
@@ -3221,14 +2015,15 @@
             "type": "string"
           },
           "menuCategory": {
-            "type": "string"
+            "type": "string",
+            "description": "Category name of the menu item."
           },
           "menuDescription": {
             "type": "string"
           },
           "menuUrl": {
             "type": "string",
-            "format": "url"
+            "format": "uri-relative"
           },
           "defaultRecipe": {
             "type": "array",
@@ -3280,8 +2075,8 @@
           },
           "category": {
             "type": "string",
-            "description": "Category ID the ingredient belongs to.",
-            "example": "IC98563000"
+            "description": "Ingredient Category Name this ingredient belongs to.",
+            "example": "เมล็ดกาแฟ"
           }
         },
         "required": [
@@ -3325,7 +2120,8 @@
           },
           "category": {
             "type": "string",
-            "example": "IC10000000"
+            "description": "Ingredient Category Name this ingredient belongs to.",
+            "example": "เมล็ดกาแฟ"
           }
         },
         "required": ["name", "quantity", "unit", "costPerUnit", "category"]
@@ -3352,7 +2148,8 @@
             "format": "float"
           },
           "category": {
-            "type": "string"
+            "type": "string",
+            "description": "Ingredient Category ID this ingredient belongs to."
           }
         }
       },
@@ -3396,7 +2193,7 @@
           "ingredientId": {
             "type": "string",
             "description": "ID of the ingredient used.",
-            "example": "I98563"
+            "example": "I985630000"
           },
           "quantity": {
             "type": "number",
@@ -3427,7 +2224,7 @@
         "properties": {
           "ingredientId": {
             "type": "string",
-            "example": "I98563"
+            "example": "I985630000"
           },
           "quantity": {
             "type": "number",
@@ -3655,6 +2452,780 @@
           }
         },
         "required": ["message"]
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Unauthorized.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Authentication required."}
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "An unexpected error occurred."}
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Forbidden - Insufficient privileges.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Admin or owner privileges required."}
+          }
+        }
+      },
+      "FileUploadBadRequest": {
+        "description": "Bad Request - No file uploaded, invalid file type, or file too large.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "examples": {
+              "noFile": {"value": {"message": "No file uploaded."}},
+              "invalidType": {
+                "value": {
+                  "message": "Invalid file type. Only JPG, JPEG, PNG are allowed."
+                }
+              },
+              "tooLarge": {
+                "value": {"message": "File too large. Maximum size is 2MB."}
+              }
+            }
+          }
+        }
+      },
+      "ForbiddenErrorMenu": {
+        "description": "Forbidden - Insufficient privileges.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to manage menu items."
+            }
+          }
+        }
+      },
+      "InternalServerErrorMenuCreate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while creating the menu item."
+            }
+          }
+        }
+      },
+      "CategoryNotFoundError": {
+        "description": "Category not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Category 'เครื่องดื่มพิเศษ' not found."}
+          }
+        }
+      },
+      "InternalServerErrorMenuCategory": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving menus for the category."
+            }
+          }
+        }
+      },
+      "MenuItemNotFoundError": {
+        "description": "Menu item not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Menu item with ID 'M213560000' not found."}
+          }
+        }
+      },
+      "InternalServerErrorMenuGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the menu item."
+            }
+          }
+        }
+      },
+      "BadRequestMenuUpdate": {
+        "description": "Bad Request - Invalid input data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid menu update data provided."}
+          }
+        }
+      },
+      "InternalServerErrorMenuUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating the menu item."
+            }
+          }
+        }
+      },
+      "BadRequestMenuStatusUpdate": {
+        "description": "Bad Request - Invalid input data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid status value provided."}
+          }
+        }
+      },
+      "InternalServerErrorMenuStatusUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating menu status."
+            }
+          }
+        }
+      },
+      "InternalServerErrorMenuDelete": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while deleting the menu item."
+            }
+          }
+        }
+      },
+      "MenuOrRecipeNotFoundError": {
+        "description": "Menu item or recipe not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Menu item or recipe for ID 'M213560000' not found."
+            }
+          }
+        }
+      },
+      "InternalServerErrorRecipeGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the recipe."
+            }
+          }
+        }
+      },
+      "InternalServerErrorIngredientsGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving ingredients."
+            }
+          }
+        }
+      },
+      "BadRequestIngredientCreate": {
+        "description": "Bad Request - Invalid input data or duplicate ID.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid ingredient data or ingredient ID already exists."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorIngredient": {
+        "description": "Forbidden - Insufficient privileges.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to manage ingredients."
+            }
+          }
+        }
+      },
+      "InternalServerErrorIngredientCreate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while adding the ingredient."
+            }
+          }
+        }
+      },
+      "IngredientNotFoundError": {
+        "description": "Ingredient not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Ingredient with ID 'I985630000' not found."}
+          }
+        }
+      },
+      "InternalServerErrorIngredientGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the ingredient."
+            }
+          }
+        }
+      },
+      "BadRequestIngredientUpdate": {
+        "description": "Bad Request - Invalid input data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid ingredient update data provided."}
+          }
+        }
+      },
+      "InternalServerErrorIngredientUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating the ingredient."
+            }
+          }
+        }
+      },
+      "BadRequestIngredientDelete": {
+        "description": "Bad Request - Cannot delete ingredient due to dependencies.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Cannot delete ingredient 'I985630000' as it is used in existing recipes or orders."
+            }
+          }
+        }
+      },
+      "InternalServerErrorIngredientDelete": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while deleting the ingredient."
+            }
+          }
+        }
+      },
+      "InternalServerErrorIngredientCategoriesGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving ingredient categories."
+            }
+          }
+        }
+      },
+      "IngredientCategoryNotFoundError": {
+        "description": "Ingredient category not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Ingredient category with ID 'IC_NONEXISTENT' not found."
+            }
+          }
+        }
+      },
+      "InternalServerErrorIngredientsForCategoryGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving ingredients for the category."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorOrderList": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to list all orders."
+            }
+          }
+        }
+      },
+      "InternalServerErrorOrderList": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving orders."
+            }
+          }
+        }
+      },
+      "BadRequestOrderCreate": {
+        "description": "Bad Request - Invalid input, insufficient stock, etc.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid order data. Check items, quantities, or ingredient stock."
+            }
+          }
+        }
+      },
+      "InternalServerErrorOrderCreate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while creating the order."
+            }
+          }
+        }
+      },
+      "OrderNotFoundError": {
+        "description": "Order not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Order with ID 'O265980000' not found."}
+          }
+        }
+      },
+      "InternalServerErrorOrderGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the order."
+            }
+          }
+        }
+      },
+      "BadRequestOrderStatusUpdate": {
+        "description": "Bad Request - Invalid status transition or other error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid order status update."}
+          }
+        }
+      },
+      "InternalServerErrorOrderStatusUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating the order status."
+            }
+          }
+        }
+      },
+      "BadRequestOrderDelete": {
+        "description": "Bad Request - Cannot delete a paid order.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Cannot delete order 'O265980000' because it has already been paid."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorOrderDelete": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Insufficient privileges to delete this order."
+            }
+          }
+        }
+      },
+      "InternalServerErrorOrderDelete": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while deleting the order."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeList": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to list employees."
+            }
+          }
+        }
+      },
+      "InternalServerErrorEmployeeList": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving employees."
+            }
+          }
+        }
+      },
+      "BadRequestEmployeeCreate": {
+        "description": "Bad Request - Invalid input or duplicate ID/CitizenID.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid employee data or duplicate Employee ID/Citizen ID."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeCreate": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to add employees."
+            }
+          }
+        }
+      },
+      "InternalServerErrorEmployeeCreate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while creating the employee."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeGet": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Access denied. You can only view your own profile or require admin privileges."
+            }
+          }
+        }
+      },
+      "EmployeeNotFoundError": {
+        "description": "Employee not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Employee with ID '6609696969' not found."}
+          }
+        }
+      },
+      "InternalServerErrorEmployeeGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the employee."
+            }
+          }
+        }
+      },
+      "BadRequestEmployeeUpdate": {
+        "description": "Bad Request - Invalid input data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid employee update data provided."}
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeUpdate": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to update employees."
+            }
+          }
+        }
+      },
+      "InternalServerErrorEmployeeUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating the employee."
+            }
+          }
+        }
+      },
+      "BadRequestEmployeeDelete": {
+        "description": "Bad Request - Cannot delete employee (e.g., active orders).",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Cannot delete employee '6609696969' due to existing dependencies (e.g., orders)."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeDelete": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to delete employees."
+            }
+          }
+        }
+      },
+      "InternalServerErrorEmployeeDelete": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while deleting the employee."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorEmployeeOrderGet": {
+        "description": "Forbidden (if not admin or self).",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Access denied. You can only view your own orders or require admin privileges."
+            }
+          }
+        }
+      },
+      "InternalServerErrorEmployeeOrderGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving employee orders."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorCustomerList": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to list customers."
+            }
+          }
+        }
+      },
+      "InternalServerErrorCustomerList": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving customers."
+            }
+          }
+        }
+      },
+      "BadRequestCustomerCreate": {
+        "description": "Bad Request - Invalid input or duplicate CitizenID/Phone.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid customer data or duplicate Citizen ID/Phone number."
+            }
+          }
+        }
+      },
+      "InternalServerErrorCustomerCreate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while creating the customer."
+            }
+          }
+        }
+      },
+      "CustomerNotFoundError": {
+        "description": "Customer not found.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Customer with Citizen ID '1266985663999' not found."
+            }
+          }
+        }
+      },
+      "InternalServerErrorCustomerGet": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while retrieving the customer."
+            }
+          }
+        }
+      },
+      "BadRequestCustomerUpdate": {
+        "description": "Bad Request - Invalid input data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {"message": "Invalid customer update data provided."}
+          }
+        }
+      },
+      "InternalServerErrorCustomerUpdate": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while updating the customer."
+            }
+          }
+        }
+      },
+      "BadRequestCustomerPointsAdd": {
+        "description": "Bad Request - Invalid points value.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid value for pointsToAdd. Must be a positive integer."
+            }
+          }
+        }
+      },
+      "InternalServerErrorCustomerPointsAdd": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while adding points."
+            }
+          }
+        }
+      },
+      "BadRequestCustomerRedeem": {
+        "description": "Bad Request - Insufficient points (less than 10).",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Insufficient points. Requires 10 points to redeem."
+            }
+          }
+        }
+      },
+      "InternalServerErrorCustomerRedeem": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while redeeming points."
+            }
+          }
+        }
+      },
+      "BadRequestReportDate": {
+        "description": "Bad Request - Invalid date format.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Invalid date format. Please use YYYY-MM-DD."
+            }
+          }
+        }
+      },
+      "ForbiddenErrorReport": {
+        "description": "Forbidden.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "Admin or owner privileges required to access reports."
+            }
+          }
+        }
+      },
+      "InternalServerErrorReport": {
+        "description": "Internal Server Error.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+            "example": {
+              "message": "An unexpected error occurred while generating the daily income report."
+            }
+          }
+        }
       }
     },
     "securitySchemes": {

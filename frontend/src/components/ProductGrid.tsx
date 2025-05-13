@@ -1,16 +1,27 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   price: number;
   image: string;
-  ingredients?: {
-    name: string;
-    amount: string;
-  }[];
+  category: string;
+  ingredients?: Ingredients[];
+}
+
+interface everyIngredients {
+  id: string;
+  name: string;
+  amount: string;
+}
+
+export interface Ingredients {
+  default: everyIngredients;
+  options: everyIngredients[];
 }
 
 interface ProductGridProps {
@@ -18,45 +29,82 @@ interface ProductGridProps {
   onAddToOrder: (product: Product) => void;
 }
 
-export default function ProductGrid({ category, onAddToOrder }: ProductGridProps) {
-  const products: Product[] = [
-    {
-      id: 'espresso',
-      name: 'Espresso',
-      price: 55,
-      image: '/images/coffee/espresso.jpg',
-      ingredients: [
-        { name: 'กาแฟคั่ว', amount: '1 oz' },
-        { name: 'น้ำร้อน', amount: '2 oz' }
-      ]
-    },
-    {
-      id: 'americano',
-      name: 'Americano',
-      price: 25,
-      image: '/images/coffee/americano.jpg',
-      ingredients: [
-        { name: 'กาแฟ', amount: '1 oz' },
-        { name: 'น้ำร้อน', amount: '4 oz' }
-      ]
-    },
-    {
-      id: 'latte',
-      name: 'Latte',
-      price: 65,
-      image: '/images/coffee/latte.jpg',
-      ingredients: [
-        { name: 'กาแฟ', amount: '1 oz' },
-        { name: 'นมร้อน', amount: '4 oz' },
-        { name: 'ฟองนม', amount: '1 oz' }
-      ]
-    },
-    // Add more products as needed
-  ];
+export default function ProductGrid({
+  category,
+  onAddToOrder,
+}: ProductGridProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  async function getProducts(category: string) {
+    try {
+      const response = await axios.get(`/api/menu/category/${category}`);
+      const ingredients = await axios.get("/api/ingredients");
+
+      const getMenu: Product[] = [];
+      for (const menu of response.data) {
+        const ing: Ingredients[] = [];
+        if (menu.MenuStatus == "พร้อมขาย") {
+          const getRecipe = await axios.get(`/api/menu/${menu.MenuID}/recipe`);
+
+          for (const re of getRecipe.data) {
+            const getIngredients = await axios.get(
+              `api/ingredients/${re.ingredientId}`
+            );
+
+            var everyIng: everyIngredients = {
+              id: getIngredients.data.ingredientId,
+              name: getIngredients.data.name,
+              amount: re.quantity + " " + getIngredients.data.unit,
+            };
+
+            var everyIngs: everyIngredients[] = [];
+            if (re.isReplaceable == true) {
+              ingredients.data.forEach((ingredient: any) => {
+                if (
+                  ingredient.category == getIngredients.data.category &&
+                  ingredient.name != getIngredients.data.name
+                ) {
+                  everyIngs.push({
+                    id: ingredient.ingredientId,
+                    name: ingredient.name,
+                    amount: re.quantity + " " + ingredient.unit,
+                  });
+                }
+              });
+            }
+
+            ing.push({
+              default: everyIng,
+              options: everyIngs,
+            });
+          }
+
+          getMenu.push({
+            id: menu.MenuID,
+            name: menu.MenuName,
+            price: Number(menu.MenuPrice),
+            image: "",
+            category: menu.MenuCategory,
+            ingredients: ing,
+          });
+        }
+      }
+
+      setProducts(getMenu);
+    } catch (error) {
+      console.error("Error fetching menu/category/${category}:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (category) {
+      getProducts(category);
+    }
+  }, [category]);
 
   return (
     <div className="grid grid-cols-5 gap-4">
-      {products.map((product) => (
+      {products.map((product: Product) => (
         <button
           key={product.id}
           onClick={() => onAddToOrder(product)}
@@ -78,4 +126,4 @@ export default function ProductGrid({ category, onAddToOrder }: ProductGridProps
       ))}
     </div>
   );
-} 
+}

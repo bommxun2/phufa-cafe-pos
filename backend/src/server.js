@@ -1,49 +1,49 @@
-const express = require("express");
-const dotenv = require("dotenv");
+const express = require('express');
+const dotenv = require('dotenv');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/api-spec.json');
 
-dotenv.config({ path: '.env' });
+dotenv.config({path: '.env'});
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const errorHandlerMiddleware = require("./middlewares/errorServer.middleware");
-const orderRoutes = require("./routes/order.route");
-const reportsRouter = require('./routes/report.route');
-const employeesRouter = require('./routes/employee.route');
-const customerRouter = require('./routes/customer.route');
-const ingredientRoutes = require("./routes/ingredient.route");
-const menuRoutes = require("./routes/menu.route");
-const errorNotFoundMiddleware = require("./middlewares/errorNotFound.middleware");
-
+const errorHandlerMiddleware = require('./middlewares/errorServer.middleware');
+const errorNotFoundMiddleware = require('./middlewares/errorNotFound.middleware');
 
 app.use(express.json());
 
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/orders', orderRoutes);
-app.use('/reports', reportsRouter);
-app.use('/employees', employeesRouter);
-app.use('/customers', customerRouter);
-app.use("/ingredients", ingredientRoutes);
-app.use('/menu', menuRoutes);
+app.use('/orders', require('./routes/order.route'));
+app.use('/reports', require('./routes/report.route'));
+app.use('/employees', require('./routes/employee.route'));
+app.use('/customers', require('./routes/customer.route'));
+app.use('/ingredients', require('./routes/ingredient.route'));
+app.use('/menu', require('./routes/menu.route'));
+app.use(
+  '/ingredient-categories',
+  require('./routes/ingredient-categories.route'),
+);
+app.use('/uploads', require('./routes/upload.route'));
+app.use('/auth', require('./routes/auth.route'));
 
-
-app.get("/", (req, res) => {
-    res.json({
-        status: "ok",
-        message: "Backend service is operational.",
-        serviceName: "PhufaCafeAPI",
-        timestamp: new Date().toISOString(),
-    });
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Backend service is operational.',
+    serviceName: 'PhufaCafeAPI',
+    timestamp: new Date().toISOString(),
+  });
 });
 
-app.use(errorNotFoundMiddleware)
+app.use(errorNotFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
-    console.log(`Backend service listening on port ${port}`);
+  console.log(`Backend service listening on port ${port}`);
 });
 
 module.exports = app;

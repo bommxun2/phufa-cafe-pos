@@ -1,12 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '@/components/layout/Header';
-import OrderList from '@/components/order/OrderList';
-import OrderDetail from '@/components/order/OrderDetail';
+import OrderList, { type Order } from '@/components/order/OrderList';
+import OrderDetail from '@/components/order/OrderDetailFromOrder';
 
 export default function Orders() {
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [summary, setSummary] = useState<{ totalIncome: number; orderCount: number } | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().slice(0, 10); // YYYY-MM-DD
+  });
+
+  // Helper function to format date for display
+  function formatDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/orders').then(res => res.json()),
+      fetch('/api/customers').then(res => res.json()),
+      fetch('/api/employees').then(res => res.json()),
+    ])
+      .then(([ordersData, customersData, employeesData]) => {
+        const filtered = ordersData.filter((order: any) => {
+          const orderDate = order.orderDateTime?.slice(0, 10); // Extract date part from orderDateTime
+          return orderDate === selectedDate; // Compare with selectedDate
+        });
+        setOrders(filtered);
+        setCustomers(customersData);
+        setEmployees(employeesData);
+      })
+      .catch(() => {
+      });
+    fetch(`/api/reports/daily-income?date=${selectedDate}`)
+      .then(res => res.json())
+      .then(data => setSummary({ totalIncome: data.totalIncome, orderCount: data.orderCount }))
+      .catch(() => setSummary(null));
+  }, [selectedDate]);
 
   return (
     <div className="min-h-screen bg-sage-100">
@@ -16,23 +58,30 @@ export default function Orders() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-medium">April 2025</h1>
+                <h1 className="text-2xl font-medium">{formatDate(selectedDate)}</h1>
+                <input
+                  type="date"
+                  className="border rounded px-2 py-1 ml-4"
+                  value={selectedDate}
+                  onChange={e => setSelectedDate(e.target.value)}
+                  max={new Date().toISOString().slice(0, 10)}
+                />
                 <div className="flex items-center gap-4 ml-8">
                   <div className="bg-primary text-white px-6 py-4 rounded-lg">
                     <div className="text-sm mb-1">Sales</div>
-                    <div className="text-2xl font-medium">52,540.00</div>
+                    <div className="text-2xl font-medium">{summary ? summary.totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</div>
                   </div>
                   <div className="bg-[#003D5B] text-white px-6 py-4 rounded-lg">
                     <div className="text-sm mb-1">Orders</div>
-                    <div className="text-2xl font-medium">1080</div>
+                    <div className="text-2xl font-medium">{summary ? summary.orderCount : '-'}</div>
                   </div>
                 </div>
               </div>
             </div>
-            <OrderList onSelectOrder={setSelectedOrder} />
+            <OrderList onSelectOrder={setSelectedOrder} selectedDate={selectedDate} orders={orders} customers={customers} employees={employees}/>
           </div>
           <div className="w-[400px]">
-            {selectedOrder && <OrderDetail order={selectedOrder} />}
+            <OrderDetail order={selectedOrder} />
           </div>
         </div>
       </main>

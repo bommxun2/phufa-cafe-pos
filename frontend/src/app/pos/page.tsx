@@ -1,30 +1,119 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Header from '@/components/layout/Header';
-import CategoryGrid from '@/components/CategoryGrid';
-import ProductGrid from '@/components/ProductGrid';
-import OrderDetail from '@/components/order/OrderDetail';
+import { useEffect, useState } from "react";
+import Header from "@/components/layout/Header";
+import CategoryGrid from "@/components/CategoryGrid";
+import ProductGrid from "@/components/ProductGrid";
+import OrderDetail from "@/components/OrderDetailPOS";
+import axios from "axios";
+
+import { Category } from "@/components/CategoryGrid";
+import { Product } from "@/components/ProductGrid";
+import { Order } from "@/components/OrderDetailPOS";
 
 export default function POS() {
-  const [selectedCategory, setSelectedCategory] = useState('Coffee');
-  const [currentOrder, setCurrentOrder] = useState({
-    orderId: 'O265980021',
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [menuCategory, setMenuCategory] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function getMenu() {
+      try {
+        const response = await axios.get("http://localhost/api/menu");
+        const categories: Category[] = [];
+        var categoryId = 1;
+        response.data.forEach((menu: any) => {
+          const exists = categories.find((c) => c.name === menu.menuCategory);
+          if (!exists) {
+            categories.push({
+              id: categoryId,
+              name: menu.menuCategory,
+              itemCount: 1,
+            });
+            categoryId++;
+          } else {
+            exists.itemCount += 1;
+          }
+        });
+
+        setMenuCategory(categories);
+      } catch (error) {
+        console.error("Error fetching menu:", error);
+      }
+    }
+
+    getMenu();
+  }, []);
+
+  useEffect(() => {
+    if (menuCategory.length > 0 && !selectedCategory) {
+      setSelectedCategory(menuCategory[0].name);
+    }
+  }, [menuCategory]);
+
+  const [currentOrder, setCurrentOrder] = useState<Order>({
+    orderId: "",
     items: [],
-    total: 0
+    total: 0,
   });
 
-  const handleAddToOrder = (product) => {
-    setCurrentOrder(prev => ({
-      ...prev,
-      items: [...prev.items, {
-        name: product.name,
-        quantity: 1,
-        price: product.price,
-        ingredients: product.ingredients || []
-      }],
-      total: prev.total + product.price
-    }));
+  const handleAddToOrder = (product: Product) => {
+    setCurrentOrder((prev: Order) => {
+      return {
+        ...prev,
+        items: [
+          ...prev.items,
+          {
+            id: product.id,
+            name: product.name,
+            quantity: 1,
+            price: product.price,
+            ingredients: product.ingredients || [],
+          },
+        ],
+        total: prev.total + product.price,
+      };
+    });
+  };
+
+  const handleQuantityChange = (
+    index: number,
+    action: "increase" | "decrease"
+  ) => {
+    setCurrentOrder((prevOrder) => {
+      const updatedItems = [...prevOrder.items];
+      const item = updatedItems[index];
+
+      if (action === "increase") {
+        item.quantity += 1;
+      } else if (action === "decrease" && item.quantity > 1) {
+        item.quantity -= 1;
+      }
+
+      const updatedTotal = updatedItems.reduce(
+        (total, item) => total + item.price * item.quantity,
+        0
+      );
+
+      return {
+        ...prevOrder,
+        items: updatedItems,
+        total: updatedTotal,
+      };
+    });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setCurrentOrder((prev) => {
+      const updatedItems = [...prev.items];
+      const removedItem = updatedItems.splice(index, 1)[0];
+      const newTotal = prev.total - removedItem.price * removedItem.quantity;
+
+      return {
+        ...prev,
+        items: updatedItems,
+        total: newTotal,
+      };
+    });
   };
 
   return (
@@ -58,6 +147,7 @@ export default function POS() {
             <CategoryGrid
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
+              menuCategory={menuCategory}
             />
             <ProductGrid
               category={selectedCategory}
@@ -65,10 +155,16 @@ export default function POS() {
             />
           </div>
           <div className="w-[400px]">
-            <OrderDetail order={currentOrder} />
+            <OrderDetail
+              order={currentOrder}
+              onSetCurrentOrder={setCurrentOrder}
+              updateQuantity={handleQuantityChange}
+              removeItem={handleRemoveItem}
+            />
+
           </div>
         </div>
       </main>
     </div>
   );
-} 
+}

@@ -14,7 +14,7 @@ async function processOrderItem(item, orderId, connection) {
   }
 
   // Fetch menu item details
-  const [menuItemRows] = await connection.execute(
+  const menuItemRows = await connection.execute(
     'SELECT MenuPrice, MenuName FROM Menu WHERE MenuID = ? AND MenuStatus = "พร้อมขาย"',
     [item.menuId]
   );
@@ -163,9 +163,14 @@ module.exports = async (req, res) => {
       orderItemsResults.push(itemResult.orderItem);
     }
 
-    await connection.commit();
-
+    // Update order price after processing all items
+    await connection.execute(
+      'UPDATE `Order` SET OrderPrice = ? WHERE OrderID = ?',
+      [calculatedOrderPrice, orderId],
+    );
     
+
+    await connection.commit();
     res.status(201).json({
       orderId: orderId,
       orderDateTime: orderDateTime.toISOString(),
@@ -179,9 +184,9 @@ module.exports = async (req, res) => {
     if (connection) {
       await connection.rollback();
     }
-    console.error("Error creating order:", error);
+    console.error('Error creating order:', error);
     res.status(500).json({
-      message: "An unexpected error occurred while creating the order.",
+      message: 'An unexpected error occurred while creating the order.',
     });
   } finally {
     if (connection) {

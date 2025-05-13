@@ -7,33 +7,37 @@ const redeemPointController = async (req, res) => {
   try {
     conn = await pool.getConnection();
 
-    const rows = await conn.query('SELECT * FROM Customer WHERE CitizenID = ?', [customerId]);
+    const rows = await conn.query(
+      'SELECT * FROM Customer WHERE CitizenID = ?',
+      [customerId],
+    );
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Customer not found!' });
+      return res.status(404).json({message: 'Customer not found!'});
     }
 
     const customer = rows[0];
 
     if (customer.Point < 10) {
-      return res.status(400).json({ message: 'Not enough points to redeem a free drink' });
+      return res
+        .status(400)
+        .json({message: 'Not enough points to redeem a free drink'});
     }
 
     const newPoint = customer.Point - 10;
 
-    await conn.query(
-      'UPDATE Customer SET Point = ? WHERE CitizenID = ?',
-      [newPoint, customerId]
-    );
+    await conn.query('UPDATE Customer SET Point = ? WHERE CitizenID = ?', [
+      newPoint,
+      customerId,
+    ]);
 
     res.status(200).json({
       citizenId: customerId,
       newPointBalance: newPoint,
-      message: 'Free drink reward applied.'
+      message: 'Free drink reward applied.',
     });
-
   } catch (err) {
-    res.status(500).json({ message: `Error occured ${err.message}` });
+    res.status(500).json({message: `Error occured ${err.message}`});
   } finally {
     if (conn) await conn.release();
   }

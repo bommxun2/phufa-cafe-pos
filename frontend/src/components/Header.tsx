@@ -4,12 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
 
   const navigation = [
     { name: 'POS', href: '/pos' },
@@ -49,7 +48,7 @@ export default function Header() {
         </div>
         <Menu as="div" className="relative">
           <Menu.Button className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded-lg transition-colors">
-            <span className="text-sm font-medium">{user?.displayName || 'Guest'}</span>
+            <span className="text-sm font-medium">{EmployeeName || 'Guest'}</span>
             <span className="text-xs text-gray-500">Cashier</span>
             <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
           </Menu.Button>
