@@ -115,6 +115,7 @@ export default function Orders() {
               customers={customers}
               employees={employees}
               setOrders={setOrders}
+              setSummary={setSummary}
             />
           </div>
           <div className="w-[400px]">

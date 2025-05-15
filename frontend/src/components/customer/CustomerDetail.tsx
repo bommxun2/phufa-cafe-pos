@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface CustomerDetailProps {
   selectedCustomer: any;
@@ -15,17 +15,37 @@ export default function CustomerDetail({
   setCustomers,
 }: CustomerDetailProps) {
   const [error, seError] = useState("");
+  const basePointRef = useRef<number>(selectedCustomer.point);
+
+  useEffect(() => {
+    basePointRef.current = selectedCustomer.point;
+  }, [selectedCustomer.citizenId]);
+
   const saveCustomer = async () => {
     try {
       let updatedCustomer = selectedCustomer;
 
       if (selectedCustomer.newCustomer == true) {
         await axios.post(`/api/customers`, selectedCustomer);
+        await axios.post(
+          `/api/customers/${selectedCustomer.citizenId}/points`,
+          {
+            pointsToAdd: selectedCustomer.point,
+          }
+        );
       } else {
         await axios.put(
           `/api/customers/${selectedCustomer.citizenId}`,
           selectedCustomer
         );
+        if (basePointRef.current !== selectedCustomer.point) {
+          await axios.post(
+            `/api/customers/${selectedCustomer.citizenId}/points`,
+            {
+              pointsToAdd: selectedCustomer.point - basePointRef.current,
+            }
+          );
+        }
       }
 
       setCustomers((prev) => {
@@ -172,6 +192,24 @@ export default function CustomerDetail({
               })
             }
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 sm:text-sm"
+          />
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Address
+          </label>
+          <textarea
+            value={selectedCustomer.address}
+            onChange={(e) =>
+              setSelectedCustomer({
+                ...selectedCustomer,
+                address: e.target.value,
+              })
+            }
+            rows={4}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 sm:text-sm resize-none"
           />
         </div>
 

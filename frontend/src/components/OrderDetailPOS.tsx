@@ -159,6 +159,7 @@ export default function OrderDetail({
               🥤 Exchange Free Drink!
             </button>
 
+            {/* แก้ตรงนี้เลยจ้าให้เป็น toast*/}
             {redeemSuccess && (
               <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
                 ✅ Redeem Success!
@@ -338,6 +339,8 @@ export default function OrderDetail({
             Order now
           </button>
         )}
+
+        {/* แก้ตรงนี้เลยจ้าให้เป็น toast*/}
         {orderSuccess && (
           <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
             ✅ Order Success!

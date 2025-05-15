@@ -47,7 +47,7 @@ export default function OrderDetail({ order, orders, setOrders }: OrderDetailPro
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
+                  <div className="bg-red-100 self-start text-red-800 px-2 py-1 rounded text-sm">
                     {item.quantity}x
                   </div>
                   <div>

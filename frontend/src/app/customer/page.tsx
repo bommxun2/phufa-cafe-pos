@@ -17,6 +17,7 @@ export default function Customer() {
       gender: "",
       phoneNum: "",
       point: 0,
+      address: "",
       newCustomer: true,
     });
   };

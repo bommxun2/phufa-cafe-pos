@@ -29,6 +29,9 @@ export default function CustomerTable({
             <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">
               Point
             </th>
+            <th className="px-8 py-4 text-left text-sm font-medium text-gray-500">
+              Address
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -54,7 +57,10 @@ export default function CustomerTable({
               <td className="px-6 py-4 text-sm text-gray-900">
                 {item.phoneNum}
               </td>
-              <td className="px-8 py-4 text-sm text-gray-900">{item.point}</td>
+              <td className="px-6 py-4 text-sm text-gray-900">{item.point}</td>
+              <td className="px-8 py-4 text-sm text-gray-900">
+                {item.address}
+              </td>
             </tr>
           ))}
         </tbody>
