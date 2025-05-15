@@ -15,7 +15,7 @@ async function createNewIngredient(req, res) {
     !name ||
     !quantity ||
     !unit ||
-    !Number.isInteger(adjustmentPrice) ||
+    !adjustmentPrice ||
     !costPerUnit ||
     !category
   ) {
