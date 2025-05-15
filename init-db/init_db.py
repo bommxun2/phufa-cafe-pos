@@ -167,20 +167,20 @@ create_table_statements = [
 
 # --- Sample Data ---
 persons_data = [
-    ('1266985663999', 'สมชาย', 'หล่อเหลา', 'M', '0699696999', '99 ม.18 ถ.พหลโยธิน ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี 12121', 'https://example.com/image/person_somchai.jpg'),
-    ('9876543210123', 'สมหญิง', 'ใจดี', 'F', '0812345678', '12/34 หมู่ 5 ต.บางพลี อ.บางพลี จ.สมุทรปราการ 10540', 'https://example.com/image/person_somying.jpg'),
-    ('1112223334445', 'พรเทพ', 'รักไทย', 'M', '0987654321', '555 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110', 'https://example.com/image/person_pornthep.jpg')
+    ('1166609696969', 'สมชาย', 'หล่อเหลา', 'M', '0855555555', '99 ม.18 ถ.พหลโยธิน ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี 12121', '/api/uploads/profiles/Somchai.jpg'),
+    ('1136609696970', 'สมหญิง', 'ใจดี', 'F', '0877777777', '12/34 หมู่ 5 ต.บางพลี อ.บางพลี จ.สมุทรปราการ 10540', '/api/uploads/profiles/Somyhing.jpg'),
+    ('1112223334445', 'พรเทพ', 'รักไทย', 'M', '0899999999', '555 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110', '/api/uploads/profiles/Phonthep.jpg')
 ]
 
 employees_data = [
     # EmpID, CitizenID, EmpPasswordHash, EmpRole, EmpSalary
-    ('6609696969', '1266985663999', '$argon2d$v=19$m=5120,t=2,p=1$Vywsq7mUYyfDFveHaaZNLg$7cZFHlwHw9YbPKrHOTjemtjrfL5zUSmK0Vc3ZedL3nY', 'แคชเชียร์', 25000.00),
-    ('6609696970', '9876543210123', '$argon2d$v=19$m=5120,t=2,p=1$anotherplaceholderhash$anotherplaceholdersaltvalue', 'ผู้จัดการ', 45000.00)
+    ('6609696969', '1166609696969', '$argon2d$v=19$m=5120,t=2,p=1$rzx7dJzw5RvKOJ8Ed4/7Rw$/pfB+wp4OJDpLMORmGPrDk8q7TD4CcwzSDoTKKKAHZA', 'แคชเชียร์', 25000.00),
+    ('6609696970', '1136609696970', '$argon2d$v=19$m=5120,t=2,p=1$rzx7dJzw5RvKOJ8Ed4/7Rw$/pfB+wp4OJDpLMORmGPrDk8q7TD4CcwzSDoTKKKAHZA', 'ผู้จัดการ', 45000.00)
 ]
 
 customers_data = [
     # CitizenID, Point
-    ('1266985663999', 9), # สมชาย
+    ('1166609696969', 9), # สมชาย
     ('1112223334445', 15) # พรเทพ
 ]
 
@@ -205,10 +205,10 @@ ingredients_data = [
 
 menus_data = [
     # MenuID, MenuName, MenuPrice, MenuDescription, MenuStatus, MenuURL, MenuCategory
-    ('M213560000', 'ลาเต้', 55.00, 'เย็น', 'พร้อมขาย', 'https://example.com/image/latte.jpg', 'กาแฟ'), # Example from dictionary
-    ('M213560001', 'เอสเปรสโซ่', 45.00, 'ร้อน เข้มข้น', 'พร้อมขาย', 'https://example.com/image/espresso.jpg', 'กาแฟ'),
-    ('M213560002', 'มัทฉะลาเต้', 65.00, 'ชาเขียวมัทฉะผสมนม', 'พร้อมขาย', 'https://example.com/image/matcha_latte.jpg', 'ชา'),
-    ('M213560003', 'คาราเมลมัคคิอาโต้', 70.00, 'กาแฟนมราดคาราเมล', 'ไม่พร้อมขาย', 'https://example.com/image/caramel_macchiato.jpg', 'กาแฟ')
+    ('M213560000', 'ลาเต้', 55.00, 'เย็น', 'พร้อมขาย', '/api/uploads/menus/Hot_Latte.jpg', 'กาแฟ'), # Example from dictionary
+    ('M213560001', 'เอสเปรสโซ่', 45.00, 'ร้อน เข้มข้น', 'พร้อมขาย', '/api/uploads/menus/Espresso.jpg', 'กาแฟ'),
+    ('M213560002', 'มัทฉะลาเต้', 65.00, 'ชาเขียวมัทฉะผสมนม', 'พร้อมขาย', '/api/uploads/menus/Matcha_Latte.jpg', 'ชา'),
+    ('M213560003', 'คาราเมลมัคคิอาโต้', 70.00, 'กาแฟนมราดคาราเมล', 'ไม่พร้อมขาย', '/api/uploads/menus/Caramel_Macchiato.jpg', 'กาแฟ')
 ]
 
 default_recipes_data = [
@@ -222,9 +222,9 @@ default_recipes_data = [
 
 orders_data = [
     # OrderID, OrderDateTime, OrderStatus, OrderPrice, EmpID, CitizenID
-    ('O265980000', datetime(2024, 3, 21, 0, 18, 0), False, 1500.00, '6609696969', '1112223334445'), # Example from dictionary, status adjusted
-    ('O265980001', datetime(2024, 7, 20, 10, 30, 0), True, 120.00, '6609696969', '1266985663999'),
-    ('O265980002', datetime(2024, 7, 20, 11, 5, 0), True, 45.00, '6609696970', None) # Order by non-member
+    ('O265980000', datetime(2025, 3, 21, 0, 18, 0), False, 1500.00, '6609696969', '1166609696969'), # Example from dictionary, status adjusted
+    ('O265980001', datetime(2025, 7, 20, 10, 30, 0), True, 120.00, '6609696969', '1112223334445'),
+    ('O265980002', datetime(2025, 7, 20, 11, 5, 0), True, 45.00, '6609696970', None) # Order by non-member
 ]
 
 order_items_data = [
@@ -235,7 +235,6 @@ order_items_data = [
     ('OI26598001', 'O265980001', 'M213560002', 1, 'หวานน้อย', 65.00, 0.00, 65.00), # Matcha Latte
     ('OI26598002', 'O265980001', 'M213560000', 1, None, 55.00, 0.00, 55.00),        # Latte
     # For O265980002
-    ('OI26598003', 'O265980002', 'M213560001', 1, 'เข้มๆ', 45.00, 0.00, 45.00)      # Espresso
 ]
 
 custom_ingredients_data = [
