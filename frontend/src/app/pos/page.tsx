@@ -34,7 +34,7 @@ export default function POS() {
             exists.itemCount += 1;
           }
         });
-
+        console.log(categories);
         setMenuCategory(categories);
       } catch (error) {
         console.error("Error fetching menu:", error);
@@ -67,7 +67,7 @@ export default function POS() {
             name: product.name,
             quantity: 1,
             price: product.price,
-            ingredients: product.ingredients || [],
+            ingredients: JSON.parse(JSON.stringify(product.ingredients)),
           },
         ],
         total: prev.total + product.price,
@@ -161,7 +161,6 @@ export default function POS() {
               updateQuantity={handleQuantityChange}
               removeItem={handleRemoveItem}
             />
-
           </div>
         </div>
       </main>

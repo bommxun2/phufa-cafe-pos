@@ -5,9 +5,11 @@ import axios from "axios";
 
 interface OrderDetailProps {
   order: any;
+  orders: any[];
+  setOrders: any[];
 }
 
-export default function OrderDetail({ order }: OrderDetailProps) {
+export default function OrderDetail({ order, orders, setOrders }: OrderDetailProps) {
   const items = order || {};
   const orderId = order?.orderId || "";
 
@@ -15,8 +17,12 @@ export default function OrderDetail({ order }: OrderDetailProps) {
     const res = await axios.patch(`/api/orders/${orderId}`, {
       orderStatus: true,
     });
-    if (res.status == 200) {
-      order.orderStatus = true;
+    if (res.status === 200) {
+      setOrders(
+        orders.map((o) =>
+          o.orderId === orderId ? { ...o, orderStatus: true } : o
+        )
+      );
     }
   };
 
@@ -53,7 +59,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                           className="flex justify-between"
                         >
                           <span>{ing.ingredientName}</span>
-                          <span>{ing.customizationCostApplied}</span>
+                          <span className="ml-10">{ing.customizationCostApplied}</span>
                         </div>
                       ))}
                     </div>

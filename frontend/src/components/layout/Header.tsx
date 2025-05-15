@@ -47,6 +47,7 @@ export default function Header() {
   const navigation = [
     { name: "POS", href: "/pos" },
     { name: "Menu", href: "/dashboard" },
+    { name: "Customer", href: "/customer" },
     { name: "Orders", href: "/orders" },
     { name: "Ingredients", href: "/ingredients" },
     { name: "Employees", href: "/employees" },

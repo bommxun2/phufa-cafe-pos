@@ -118,7 +118,7 @@ export default function Orders() {
             />
           </div>
           <div className="w-[400px]">
-            <OrderDetail order={selectedOrder} />
+            <OrderDetail order={selectedOrder} orders={orders} setOrders={setOrders}/>
           </div>
         </div>
       </main>

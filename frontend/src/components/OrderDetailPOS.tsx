@@ -13,7 +13,6 @@ interface OrderItem {
 }
 
 export interface Order {
-
   orderId: string;
   items: OrderItem[];
   total: number;
@@ -49,12 +48,15 @@ export default function OrderDetail({
   updateQuantity,
   removeItem,
 }: OrderDetailProps) {
-
   const items = order?.items || [];
   const total = order?.total || 0;
-  const orderId = order?.orderId || "";
   const [customerId, setCustomerId] = useState([]);
-  const [chooseCustomerId, setChooseCustomerId] = useState("");
+  const [chooseCustomerId, setChooseCustomerId] = useState({});
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [handlePlaceOrder, setHandlePlaceOrder] = useState(false);
+  const [redeemSuccess, setRedeemSuccess] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   useEffect(() => {
     async function getCustomerId() {
@@ -85,44 +87,85 @@ export default function OrderDetail({
 
       const placeOrder: PlaceOrder = {
         orderMakerEmpId: empId || "6609696969",
-        orderByCitizenId: chooseCustomerId,
+        orderByCitizenId: chooseCustomerId.citizenId,
         items: item,
       };
 
-      console.log(placeOrder);
       await axios.post("/api/orders", placeOrder);
+      if (Object.keys(chooseCustomerId).length !== 0) {
+        await axios.post(
+          `/api/customers/${chooseCustomerId.citizenId}/points`,
+          {
+            pointsToAdd: 1,
+          }
+        );
+      }
 
+      setHandlePlaceOrder(false);
+      setError("");
+      setPhone("");
       onSetCurrentOrder({ orderId: "", items: [], total: 0 });
+      setOrderSuccess(true);
+      setTimeout(() => setOrderSuccess(false), 2000);
     } catch (err) {
-      console.error("Failed to place order:", err);
-      alert("Something went wrong.");
+      setHandlePlaceOrder(true);
+
+      setTimeout(() => setHandlePlaceOrder(false), 2000);
     }
   }
 
+  const onConfirm = (phonenum) => {
+    const customer = customerId.find((id) => id.phoneNum === phonenum);
+    if (customer) {
+      setChooseCustomerId(customer);
+      setError("Have customer! customer have ");
+    } else {
+      setError("Customer not found!");
+    }
+  };
+
+  const freeDrink = async () => {
+    try {
+      const res = await axios.post(
+        `/api/customers/${chooseCustomerId.citizenId}/redeem`
+      );
+
+      setChooseCustomerId((prev) => ({
+        ...prev,
+        point: res.data.newPointBalance,
+      }));
+      setRedeemSuccess(true);
+
+      setTimeout(() => setRedeemSuccess(false), 2000);
+    } catch (error) {
+      console.error("Redeem failed:", error);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-medium">Order Detail</h2>
-
-        <div className="text-sm text-gray-500">
-          {
-            <select
-              className="border rounded px-2 py-1"
-              onChange={(e) => {
-                setChooseCustomerId(e.target.value);
-              }}
+        <div className="mt-4">
+          <div className="mt-4 relative">
+            <button
+              className="font-bold px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors border-2 border-green-700 disabled:opacity-50"
+              onClick={freeDrink}
+              disabled={
+                Object.keys(chooseCustomerId).length === 0 ||
+                chooseCustomerId.point < 10
+              }
             >
-              {customerId.map((id, index) => (
-                <option key={id.citizenId} value={id.citizenId}>
-                  {id.firstname + " " + id.lastname}
-                </option>
-              ))}
-              <option></option>
-            </select>
-          }
-        </div>
+              🥤 Exchange Free Drink!
+            </button>
 
+            {redeemSuccess && (
+              <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
+                ✅ Redeem Success!
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -130,7 +173,6 @@ export default function OrderDetail({
         {items.map((item, index) => (
           <div key={index} className="border-b border-gray-200 pb-4">
             <div className="flex items-start justify-between mb-2">
-
               <div className="flex items-start gap-2">
                 <div className="flex flex-col justify-between h-full">
                   <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
@@ -142,13 +184,11 @@ export default function OrderDetail({
                   >
                     ลบ
                   </button>
-
                 </div>
                 <div>
                   <div className="font-medium">{item.name}</div>
                   <div className="text-sm text-gray-500">
                     {item.ingredients.map((ing) => (
-
                       <div
                         key={ing.default.name}
                         className="flex my-1.5 justify-between"
@@ -159,14 +199,21 @@ export default function OrderDetail({
                             className="border rounded px-2 py-1"
                             onChange={(e) => {
                               const newName = e.target.value;
-
+                              var newId = "";
+                              var newAmount = "";
                               ing.options.map((opt) => {
                                 if (opt.name === e.target.value) {
+                                  newId = opt.id;
+                                  newAmount = opt.amount;
                                   opt.name = ing.default.name;
+                                  opt.id = ing.default.id;
+                                  opt.amount = ing.default.amount;
                                 }
                               });
 
                               ing.default.name = newName;
+                              ing.default.id = newId;
+                              ing.default.amount = newAmount;
                               console.log(order.items);
                             }}
                           >
@@ -187,7 +234,6 @@ export default function OrderDetail({
                         )}
 
                         <span className="ml-10">{ing.default.amount}</span>
-
                       </div>
                     ))}
                   </div>
@@ -211,7 +257,6 @@ export default function OrderDetail({
                   -
                 </button>
               </div>
-
             </div>
           </div>
         ))}
@@ -224,13 +269,80 @@ export default function OrderDetail({
           </div>
         </div>
 
-        <button
-          className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-          onClick={placeOrder}
-        >
+        <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+            Is the customer a member?
+          </h2>
 
-          Place Order
-        </button>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Enter customer phone number:
+          </label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setError("");
+            }}
+            placeholder="e.g. 0851764770"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+          />
+
+          {error === "" ? (
+            <button
+              onClick={() => onConfirm(phone)}
+              disabled={phone.length < 10}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              Confirm
+            </button>
+          ) : error === "Have customer! customer have " ? (
+            <span className="text-green-600 text-base block mb-2 font-bold">
+              {error}
+              <span className="text-red-600">{chooseCustomerId.point} </span>
+              point!
+            </span>
+          ) : (
+            <>
+              <span className="text-red-600 text-base block mb-2 font-bold">
+                {error}
+              </span>
+              <button
+                onClick={() => onConfirm(phone)}
+                disabled={phone.length < 9}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Confirm
+              </button>
+            </>
+          )}
+        </div>
+
+        {handlePlaceOrder == true ? (
+          <>
+            <span className="text-red-600 text-base block font-bold">
+              Error order!
+            </span>
+            <button
+              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              onClick={placeOrder}
+            >
+              Order now
+            </button>
+          </>
+        ) : (
+          <button
+            className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+            onClick={placeOrder}
+          >
+            Order now
+          </button>
+        )}
+        {orderSuccess && (
+          <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
+            ✅ Order Success!
+          </div>
+        )}
       </div>
     </div>
   );

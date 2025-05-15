@@ -87,7 +87,7 @@ export default function OrderList({ onSelectOrder, selectedDate, orders, custome
               <td className="px-6 py-4 text-sm text-gray-900">{formatDateTime(order.orderDateTime)}</td>
               <td className="px-6 py-4 text-sm text-gray-900">{getCustomerName(order.orderByCitizenId)}</td>
               <td className="px-6 py-4 text-sm text-gray-900">{getEmployeeName(order.orderMakerEmpId)}</td>
-              <td className="px-6 py-4 text-sm text-gray-900">{order.orderItems.length}</td>
+              <td className="pl-10 py-4 text-sm text-gray-900">{order.orderItems.length}</td>
               <td className="px-6 py-4 text-sm text-gray-900">{
                 order.orderPrice !== undefined && order.orderPrice !== null && !isNaN(Number(order.orderPrice))
                   ? Number(order.orderPrice).toFixed(2)
