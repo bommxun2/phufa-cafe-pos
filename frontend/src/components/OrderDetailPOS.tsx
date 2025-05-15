@@ -91,7 +91,6 @@ export default function OrderDetail({
 
       console.log(placeOrder);
       await axios.post("/api/orders", placeOrder);
-      alert("Order placed successfully!");
 
       onSetCurrentOrder({ orderId: "", items: [], total: 0 });
     } catch (err) {
