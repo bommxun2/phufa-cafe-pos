@@ -3,6 +3,7 @@
 import axios from "axios";
 import { Ingredients } from "./ProductGrid";
 import { useEffect, useState } from "react";
+import { useToast } from "@/contexts/ToastContext";
 
 interface OrderItem {
   id: string;
@@ -48,6 +49,7 @@ export default function OrderDetail({
   updateQuantity,
   removeItem,
 }: OrderDetailProps) {
+  const { addToast } = useToast();
   const items = order?.items || [];
   const total = order?.total || 0;
   const [customerId, setCustomerId] = useState([]);
@@ -55,8 +57,6 @@ export default function OrderDetail({
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [handlePlaceOrder, setHandlePlaceOrder] = useState(false);
-  const [redeemSuccess, setRedeemSuccess] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
 
   useEffect(() => {
     async function getCustomerId() {
@@ -105,8 +105,7 @@ export default function OrderDetail({
       setError("");
       setPhone("");
       onSetCurrentOrder({ orderId: "", items: [], total: 0 });
-      setOrderSuccess(true);
-      setTimeout(() => setOrderSuccess(false), 2000);
+      addToast("Order placed successfully!", "success");
     } catch (err) {
       setHandlePlaceOrder(true);
 
@@ -134,9 +133,7 @@ export default function OrderDetail({
         ...prev,
         point: res.data.newPointBalance,
       }));
-      setRedeemSuccess(true);
-
-      setTimeout(() => setRedeemSuccess(false), 2000);
+      addToast("Redeem success!", "success");
     } catch (error) {
       console.error("Redeem failed:", error);
     }
@@ -158,13 +155,6 @@ export default function OrderDetail({
             >
               🥤 Exchange Free Drink!
             </button>
-
-            {/* แก้ตรงนี้เลยจ้าให้เป็น toast*/}
-            {redeemSuccess && (
-              <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
-                ✅ Redeem Success!
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -338,13 +328,6 @@ export default function OrderDetail({
           >
             Order now
           </button>
-        )}
-
-        {/* แก้ตรงนี้เลยจ้าให้เป็น toast*/}
-        {orderSuccess && (
-          <div className="fixed bottom-5 right-5 text-green-600 font-medium bg-white px-6 py-3 text-2xl rounded shadow-lg z-50">
-            ✅ Order Success!
-          </div>
         )}
       </div>
     </div>

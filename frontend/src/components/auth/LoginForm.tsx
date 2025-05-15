@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function LoginForm() {
+  const { addToast } = useToast();
   const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -33,7 +35,7 @@ export default function LoginForm() {
       router.push("/dashboard"); // Redirect to dashboard on successful login
     } catch (error) {
       console.error("Login error:", error);
-      alert("Login failed. Please check your credentials.");
+      addToast("Login failed. Please check your credentials.", "error");
     }
   };
 
