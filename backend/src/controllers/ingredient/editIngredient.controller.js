@@ -36,10 +36,22 @@ async function editIngredient(req, res) {
       'IngredientCategoryID',
     ];
 
-    updateData.category = ingredientId; // เพิ่ม ingredientId ลงใน updateData
-
     const updateFields = [];
     const updateValues = [];
+
+    // ตรวจสอบ CategoryName ว่ามีอยู่ในฐานข้อมูลหรือไม่
+    if (updateData.category) {
+      const categoryCheck = await conn.query(
+        'SELECT * FROM IngredientCategory WHERE Name = ? LIMIT 1',
+        [updateData.category],
+      );
+      if (categoryCheck.length === 0) {
+        return res.status(404).json({
+          message: `Category ${updateData.category} not found`,
+        });
+      }
+      updateData.IngredientCategoryID = categoryCheck[0].IngredientCategoryID;
+    }
 
     for (const key in updateData) {
       if (allowedFields.includes(key)) {
