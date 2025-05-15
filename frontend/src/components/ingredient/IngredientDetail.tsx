@@ -143,14 +143,11 @@ export default function IngredientDetail({
         unit,
         adjustmentPrice,
         costPerUnit,
-        category: categoryId,
+        category,
       } = formData;
 
       if (isCreating) {
-        const categoryName = categories.find(
-          (c) => c.ingredientCategoryId === categoryId
-        )?.name;
-        if (!categoryName) {
+        if (!category) {
           addToast("Selected category is invalid.", "error");
           setIsLoading(false);
           return;
@@ -161,7 +158,7 @@ export default function IngredientDetail({
           unit: unit!,
           adjustmentPrice: Number(adjustmentPrice),
           costPerUnit: Number(costPerUnit),
-          category: categoryName,
+          category,
         };
         savedIngredientResponse = await ingredientApi.create(payload);
         addToast(
@@ -176,7 +173,7 @@ export default function IngredientDetail({
           unit,
           adjustmentPrice: Number(adjustmentPrice),
           costPerUnit: Number(costPerUnit),
-          category: categoryId,
+          category: formData.category,
         };
         savedIngredientResponse = await ingredientApi.update(
           initialData!.ingredientId!,
@@ -444,21 +441,13 @@ export default function IngredientDetail({
             </option>
             {categories.map((categoryOpt) => (
               <option
-                key={categoryOpt.ingredientCategoryId}
-                value={categoryOpt.ingredientCategoryId}
+                key={categoryOpt.name}
+                value={categoryOpt.name}
               >
                 {categoryOpt.name}
               </option>
             ))}
           </select>
-          {!isEditing && formData.category && (
-            <p className="mt-1 text-sm text-gray-500">
-              Selected:{" "}
-              {categories.find(
-                (c) => c.ingredientCategoryId === formData.category
-              )?.name || "N/A"}
-            </p>
-          )}
         </div>
       </div>
 
