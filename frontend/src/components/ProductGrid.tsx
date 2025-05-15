@@ -83,7 +83,7 @@ export default function ProductGrid({
           id: menu.MenuID,
           name: menu.MenuName,
           price: Number(menu.MenuPrice),
-          image: "",
+          image: menu.MenuURL,
           category: menu.MenuCategory,
           status: menu.MenuStatus,
           ingredients: ing,
@@ -119,9 +119,8 @@ export default function ProductGrid({
             }`}
           >
             <div className="relative h-32 w-full">
-              <Image
+              <img
                 src={product.image}
-                fill
                 className="object-cover"
               />
               {isUnavailable && (
