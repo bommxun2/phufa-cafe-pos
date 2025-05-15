@@ -1,19 +1,46 @@
 'use client';
 
 import { useState } from 'react';
-import MenuTable from '@/components/menu/MenuTable';
+import MenuTable,{ MenuItem} from '@/components/menu/MenuTable';
 import MenuDetail from '@/components/menu/MenuDetail';
 import Header from '@/components/layout/Header';
-import type { MenuItem } from '@/components/menu/MenuDetail';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function Dashboard() {
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);//click on "Add New Menu" button to change to add menu mode
+  const { addToast } = useToast();
+  const [refetchCount, setRefetchCount] = useState(0);
 
   const handleAddMenu = () => {
     setIsCreating(true);
     setSelectedMenu(null); // ล้างเมนูที่เลือกไว้ก่อน
   };
+
+  const handleSelectMenu = async (menu: MenuItem) => {
+    try {
+      const res = await fetch(`/api/menu/${menu.menuId}/recipe`);
+      if (!res.ok) throw new Error('Failed to load Recipe');
+      
+      const recipe = await res.json();
+      setSelectedMenu({ ...menu, defaultRecipe: recipe });
+      setIsCreating(false);
+    } catch (err:any) {
+      console.error('Failed to load Recipe:', err);
+      addToast('Error occurred when loading DefaultRecipe', 'error');
+    }
+  };
+
+  const handleSaved = () => {
+    setIsCreating(false);
+    setSelectedMenu(null);
+    setRefetchCount((prev) => prev + 1); // บอก MenuTable ให้โหลดใหม่
+  };
+
+  const handleCancel = () => {
+  setSelectedMenu(null);
+  setIsCreating(false);
+};
 
   return (
     <div className="min-h-screen bg-sage-100">
@@ -29,24 +56,20 @@ export default function Dashboard() {
                 Add New Menu
               </button>
             </div>
-            <MenuTable onSelectMenu={(menu) => {
-              setSelectedMenu(menu);
-              setIsCreating(false);
-            }} />
+            <MenuTable onSelectMenu={handleSelectMenu} refetchSignal={refetchCount} />
           </div>
           
-          <div className="w-[400px]">
+          <div>
             {(isCreating || selectedMenu) && (
               <MenuDetail
-                menu={selectedMenu} 
+                menu={selectedMenu}
                 isCreating={isCreating}
-                onSaved={() => {
-                setIsCreating(false);
-                setSelectedMenu(null);
-              }}
+                onSaved={handleSaved}
+                onCancel={handleCancel}
               />
             )}
           </div>
+
         </div>
       </main>
     </div>

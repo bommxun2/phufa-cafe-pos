@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Ingredient {
   ingredientId: string;
@@ -15,15 +16,17 @@ export interface RecipeItem {
   categoryId: string;
   ingredientId: string;
   quantity: number;
+  isBaseIngredient: boolean;
+  isReplaceable: boolean;
 }
 export interface MenuItem {
   menuId?: string;
   menuName: string;
   menuPrice: number;
   menuStatus: string;
+  menuCategory: string;
   menuDescription: string;
   menuUrl: string;
-  menuCategory: string;
   defaultRecipe: RecipeItem[];
 }
 
@@ -31,9 +34,13 @@ interface MenuDetailProps {
   menu: MenuItem | null;
   isCreating?: boolean;
   onSaved?: () => void;
+  onCancel?: () => void;
 }
 
-export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProps) {
+export default function MenuDetail({ menu, isCreating, onSaved, onCancel }: MenuDetailProps) {
+
+  const { addToast } = useToast();
+
   const [form, setForm] = useState<MenuItem>({
     menuName: '',
     menuPrice: 0,
@@ -91,7 +98,7 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
    const handleRecipeChange = (
     index: number,
     field: keyof RecipeItem,
-    value: string | number
+    value: string | number | boolean
   ) => {
     const updated = [...form.defaultRecipe];
     updated[index][field] = value as never;
@@ -102,7 +109,7 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
 
    const handleAddRecipe = () => {
     if (categories.length === 0) {
-      alert('No Ingredient Category yet');
+      addToast('No Ingredient Category yet',"error");
       return;
     }
     const firstCategoryId = categories[0].ingredientCategoryId;
@@ -115,7 +122,9 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
         {
           categoryId: firstCategoryId,
           ingredientId: '',
-          quantity: 0
+          quantity: 0,
+          isBaseIngredient: false,
+          isReplaceable: false
         }
       ]
     });
@@ -144,10 +153,10 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
 
       if (!res.ok) throw new Error(isEditing ? 'Failed to edit menu' : 'Failed to Create menu');
       const message = isEditing ? 'Update Menu Successfully' : 'Create Menu Successfully';
-      alert(message);
+      addToast(message,'success');
       onSaved?.(); // เรียก callback ให้ parent รีเฟรชหรือปิด form
     } catch (err: any) {
-      alert('Error occurred: ' + err.message);
+      addToast('Error occurred:  ${err.message}','error');
     }
   };
   
@@ -163,16 +172,16 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
     });
 
     if (res.status === 204) {
-      alert('Delete Menu Successfully');
+      addToast('Delete Menu Successfully',"success");
       onSaved?.();
     } else if (res.status === 404) {
-      alert('Menu Not Found!');
+      addToast('Menu Not Found!','error');
     } else {
       const data = await res.json();
-      alert(`Error occurred: ${data.message || 'Cannot Delete Menu'}`);
+      addToast(`Error occurred: ${data.message || 'Cannot Delete Menu'}`,'error');
     }
   } catch (error: any) {
-    alert('Error occurred: ' + error.message);
+    addToast('Error occurred:  + ${err.message}','error');
   }
   };
 
@@ -180,8 +189,16 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
     <div className="bg-white rounded-xl shadow-sm p-6">
   
       <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={onCancel}
+          className="text-2xl text-gray-700 hover:text-black font-bold mb-2"
+          title="Cancel"
+        >
+          &lt;
+        </button>
+
         <h2 className="text-xl font-semibold mb-4">
-        {isCreating ? 'Add New Menu' : form.menuId}
+        {isCreating ? 'Add New Menu' : form.menuName}
         </h2>
         
         {!isCreating && form.menuId && (
@@ -211,6 +228,8 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
           <label className="block text-sm font-medium">Menu ID</label>
           <input
             type="text"
+            placeholder='AutoGenerate'
+            readOnly
             value={form.menuId}
             onChange={(e) => handleChange('menuId', e.target.value)}
             className="w-full border rounded px-2 py-1"
@@ -239,8 +258,9 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
         <div>
           <label className="block text-sm font-medium text-gray-700">Price</label>
           <input
-            type="number"
-            value={form.menuPrice}
+            type="text"
+            placeholder='Baht'
+            value={form.menuPrice||''}
             onChange={(e) => handleChange('menuPrice', Number(e.target.value))}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 sm:text-sm"
           />
@@ -292,15 +312,40 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
                   ))}
                 </select>
 
+                <label className="block text-sm font-medium">unit (g)</label>
                 <input
-                  type="number"
-                  //placeholder="ปริมาณ"
-                  value={item.quantity}
+                  type="text"
+                  placeholder="ex. 50"
+                  value={item.quantity||''}
                   onChange={(e) =>
                     handleRecipeChange(index, 'quantity', Number(e.target.value))
                   }
                   className="w-full border rounded px-2 py-1"
                 />
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={item.isBaseIngredient}
+                    onChange={(e) =>
+                      handleRecipeChange(index, 'isBaseIngredient', e.target.checked)
+                    }
+                    className="mr-2"
+                  />
+                  Base Ingredient
+                </label>
+                  
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={item.isReplaceable}
+                    onChange={(e) =>
+                      handleRecipeChange(index, 'isReplaceable', e.target.checked)
+                    }
+                    className="mr-2"
+                  />
+                  Replaceable
+                </label>
 
                 <button
                   type="button"
@@ -309,6 +354,7 @@ export default function MenuDetail({ menu, isCreating, onSaved }: MenuDetailProp
                 >
                   Delete
                 </button>
+
               </div>
             );
           })}

@@ -13,34 +13,35 @@ export interface MenuItem {
 }
 
 interface MenuTableProps {
-  onSelectMenu: (menu: MenuItem | null) => void;
+  onSelectMenu: (menu: MenuItem) => void | Promise<void>;
+  refetchSignal?: number; // ตัวกระตุ้นให้โหลดใหม่
 }
 
 
-export default function MenuTable({ onSelectMenu }: MenuTableProps) {
+export default function MenuTable({ onSelectMenu, refetchSignal }: MenuTableProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMenus = async () => {
-      try {
-        const res = await fetch('/api/menu');
-        if (!res.ok) {
-          throw new Error('Cannot load menu');
-        }
-        const data = await res.json();
-        setMenuItems(data);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
+        fetchMenus();
+  }, [refetchSignal]);
 
-    fetchMenus();
-  }, []);
+  const fetchMenus = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/menu');
+      if (!res.ok) throw new Error('Failed to load Menu');
+      const data = await res.json();
+      setMenuItems(data);
+    } catch (err: any) {
+      console.error('Error occurred when load Menu:', err);
+      setError(err.message || 'Error Occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return <p>Loading menu...</p>;
   if (error) return <p className="text-red-600">{error}</p>
@@ -63,7 +64,7 @@ export default function MenuTable({ onSelectMenu }: MenuTableProps) {
           {menuItems.map((item) => (
             <tr
               key={item.menuId}
-              onClick={() => onSelectMenu({ ...item, defaultRecipe: [] })}
+              onClick={() => onSelectMenu(item)}
               className="hover:bg-gray-50 cursor-pointer"
             >
               <td className="px-6 py-4 text-sm text-gray-900">{item.menuId}</td>
