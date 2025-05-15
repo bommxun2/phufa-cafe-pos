@@ -1,4 +1,5 @@
 const pool = require('../../utils/database.js');
+const {generateOrderId, generateOrderItemId} = require('../../utils/idGenerator.js');
 
 const redeemPointController = async (req, res) => {
   const customerId = req.params.customerId;
@@ -26,10 +27,44 @@ const redeemPointController = async (req, res) => {
 
     const newPoint = customer.Point - 10;
 
+    await conn.beginTransaction();
+
+    const orderId = generateOrderId();
+    const orderItemId = generateOrderItemId();
+    const orderDateTime = new Date();
+
+    await connection.execute(
+      "INSERT INTO OrderItem (OrderItemID, OrderID, MenuID, Quantity, Note, ItemBasePrice, CustomizeCost, ItemTotalPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        orderItemId,
+        orderId,
+        "M213560000",
+        1,
+        "แลกเครื่องดื่มฟรี",
+        0,
+        0,
+        0,
+      ]
+    );
+
+    await connection.execute(
+      "INSERT INTO `Order` (OrderID, OrderDateTime, OrderStatus, OrderPrice, EmpID, CitizenID) VALUES (?, ?, ?, ?, ?, ?)",
+      [
+        orderId,
+        orderDateTime,
+        false,
+        0,
+        "6609696970",
+        customerId || null,
+      ]
+    );
+
     await conn.query('UPDATE Customer SET Point = ? WHERE CitizenID = ?', [
       newPoint,
       customerId,
     ]);
+
+    await conn.commit();
 
     res.status(200).json({
       citizenId: customerId,
