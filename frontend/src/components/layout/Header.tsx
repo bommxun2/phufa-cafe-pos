@@ -1,32 +1,55 @@
 "use client";
 
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Header() {
+  const router = useRouter();
   const pathname = usePathname();
 
-  const EmployeeName = localStorage.getItem("employeeName");
-  const EmployeeRole = localStorage.getItem("employeeRole");
-  const EmployeeId = localStorage.getItem("employeeId");
-  const token = localStorage.getItem("token");
-  console.log("EmployeeId:", EmployeeId);
-  console.log("EmployeeName:", EmployeeName);
-  console.log("EmployeeRole:", EmployeeRole);
+  const [EmployeeName, setEmployeeName] = useState<string | null>(null);
+  const [EmployeeRole, setEmployeeRole] = useState<string | null>(null);
+  const [EmployeeId, setEmployeeId] = useState<string | null>(null);
+  const [Token, setToken] = useState<string | null>(null);
+  const [EmployeeImage, setEmployeeImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEmployeeName(localStorage.getItem("employeeName"));
+    setEmployeeRole(localStorage.getItem("employeeRole"));
+    setEmployeeId(localStorage.getItem("employeeId"));
+    setToken(localStorage.getItem("token"));
+
+    const fetchEmployeeImage = async () => {
+      const response = await fetch(`/api/employees/${EmployeeId}`);
+      if (response.ok) {
+        const imageUrl = await response.json();
+        console.log(imageUrl);
+        setEmployeeImage(imageUrl.profileUrl);
+      } else {
+        console.error("Failed to fetch employee image");
+      }
+    };
+    if (EmployeeId) {
+      fetchEmployeeImage();
+    }
+  }, [EmployeeId]);
 
   const logout = () => {
     localStorage.removeItem("employeeId");
     localStorage.removeItem("employeeName");
     localStorage.removeItem("employeeRole");
     localStorage.removeItem("token");
-    window.location.href = "/";
+    router.replace("/");
   };
 
   const navigation = [
     { name: "POS", href: "/pos" },
     { name: "Menu", href: "/dashboard" },
     { name: "Orders", href: "/orders" },
+    { name: "Ingredients", href: "/ingredients" },
+    { name: "Employees", href: "/employees" },
   ];
 
   return (
@@ -53,7 +76,17 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{EmployeeName}</span>
           <span className="text-xs text-gray-500">Cashier</span>
-          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+          <div className="w-8 h-8 bg-gray-200 rounded-full">
+            {EmployeeImage && (
+              <img
+                src={`${EmployeeImage}`}
+                alt=""
+                width={32}
+                height={32}
+                className="w-full h-full rounded-full object-cover"
+              />
+            )}
+          </div>
           <button onClick={logout} className="ml-10">
             <svg
               xmlns="http://www.w3.org/2000/svg"
