@@ -1,12 +1,13 @@
 const pool = require('../../utils/database');
-const {validationResult} = require('express-validator');
 
 const updateMenu = async (req, res) => {
   const menu = req.body;
   const {menuId} = req.params;
 
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  // Validate the request body
+
+  console.log('menu', menu);
+  if (!menu.menuName || !menu.menuPrice || !menu.menuStatus || !menu.menuCategory || !menu.menuUrl) {
     return res.status(400).json({
       error: 'Bad Request - Invalid input data.',
     });
