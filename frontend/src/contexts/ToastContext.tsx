@@ -1,13 +1,12 @@
-// src/contexts/ToastContext.tsx (หรือ contexts/ToastContext.tsx ถ้า src ไม่ใช่ root)
-"use client"; // Mark this as a Client Component
+// src/contexts/ToastContext.tsx
+"use client";
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import OriginalToastHook, {
   ToastContainer as OriginalToastContainer,
   ToastType as OriginalToastType,
-} from "@/components/common/Toast"; // Adjust path to your Toast.tsx
+} from "@/components/common/Toast"; // Adjust path if your Toast.tsx is elsewhere
 
-// Re-export ToastType for convenience
 export type ToastType = OriginalToastType;
 
 interface ToastContextType {
@@ -31,13 +30,13 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     removeToast,
   } = OriginalToastHook();
 
-  // Ensure addToast callback is stable if OriginalToastHook provides a stable one
-  // Or wrap with useCallback if necessary, though usually state setters from useState are stable.
+  // addToast from useState (via OriginalToastHook) is typically stable,
+  // but wrapping with useCallback ensures stability if OriginalToastHook's addToast isn't memoized.
   const addToast = useCallback(
     (message: string, type: ToastType) => {
       originalAddToast(message, type);
     },
-    [originalAddToast]
+    [originalAddToast] // Dependency on originalAddToast
   );
 
   return (

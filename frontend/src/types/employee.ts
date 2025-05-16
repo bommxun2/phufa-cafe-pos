@@ -1,5 +1,5 @@
-// src/types/employee.ts (หรือที่เดียวกับ Ingredient types)
-
+// src/types/employee.ts
+// No changes needed.
 export type PersonBase = {
   citizenId: string;
   firstname: string;

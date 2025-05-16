@@ -1,11 +1,16 @@
+// src/app/layout.tsx
 import './globals.css'
 import type { Metadata } from 'next'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { ToastProvider } from '@/contexts/ToastContext'; // 👈 1. Import ToastProvider
+import { ToastProvider } from '@/contexts/ToastContext';
+
+// Consider using a more engaging font, e.g., from Google Fonts
+// import { Inter } from 'next/font/google'
+// const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Phufa Cafe POS',
-  description: 'Point of Sale system for Phufa Cafe',
+  description: 'Point of Sale system for Phufa Cafe, by Group 15', // Added group name
 }
 
 export default function RootLayout({
@@ -15,9 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* <body className={inter.className}> */}
       <body>
         <AuthProvider>
-          <ToastProvider> {/* 👈 2. Wrap children (or AuthProvider) with ToastProvider */}
+          <ToastProvider>
             {children}
           </ToastProvider>
         </AuthProvider>

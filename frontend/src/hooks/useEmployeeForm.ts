@@ -1,24 +1,24 @@
 // src/hooks/useEmployeeForm.ts
 import { useState, useEffect, useCallback } from 'react';
-import { EmployeeFormData, EmployeeFromAPI } from '@/types/employee'; // Adjust path
+import { EmployeeFormData, EmployeeFromAPI } from '@/types/employee';
 
 const defaultNewEmployeeValues: EmployeeFormData = {
   empId: "",
   citizenId: "",
   firstname: "",
   lastname: "",
-  gender: "M",
+  gender: "M", // Default gender
   phoneNum: "",
   address: "",
-  profileUrl: "", // This will hold the URL string
+  profileUrl: "",
   empRole: "",
-  empSalary: "", 
+  empSalary: "", // string for form input
   password: "",
   confirmPassword: "",
 };
 
 interface UseEmployeeFormProps {
-  initialData?: EmployeeFromAPI; 
+  initialData?: EmployeeFromAPI;
   isCreating: boolean;
 }
 
@@ -29,13 +29,16 @@ export function useEmployeeForm({ initialData, isCreating }: UseEmployeeFormProp
     }
     if (initialData) {
       return {
+        // Spread initialData which conforms to EmployeeFromAPI (subset of PersonBase + Employee specific)
         ...initialData,
-        empSalary: String(initialData.empSalary), 
+        // Override or add fields specific to EmployeeFormData
+        empSalary: String(initialData.empSalary), // Convert number to string for form
         profileUrl: initialData.profileUrl || "", // Ensure profileUrl is initialized
-        password: "", 
+        password: "", // Clear password fields for edit form
         confirmPassword: "",
       };
     }
+    // Fallback if initialData is somehow not provided in edit mode (should not happen ideally)
     return { ...defaultNewEmployeeValues };
   }, [initialData, isCreating]);
 
@@ -49,7 +52,7 @@ export function useEmployeeForm({ initialData, isCreating }: UseEmployeeFormProp
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value, // Value from form inputs is typically string
     }));
   };
 
@@ -59,7 +62,7 @@ export function useEmployeeForm({ initialData, isCreating }: UseEmployeeFormProp
 
   return {
     formData,
-    setFormData, // Expose setFormData if needed for direct profileUrl update after upload
+    setFormData,
     handleInputChange,
     resetForm,
   };
