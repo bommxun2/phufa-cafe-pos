@@ -1,12 +1,15 @@
-// src/components/CategoryGrid.tsx
 "use client";
 
-import type { ProductCategory } from "@/types/menu"; // Use centralized type
+export interface Category {
+  id: number;
+  name: string;
+  itemCount: number;
+}
 
 interface CategoryGridProps {
-  selectedCategory: string; // Name of the category
-  onSelectCategory: (categoryName: string) => void;
-  menuCategory: ProductCategory[]; // Array of category objects
+  selectedCategory: string;
+  onSelectCategory: (category: string) => void;
+  menuCategory: Category[];
 }
 
 export default function CategoryGrid({
@@ -15,17 +18,17 @@ export default function CategoryGrid({
   menuCategory,
 }: CategoryGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6"> {/* Responsive columns */}
+    <div className="grid grid-cols-4 gap-4 mb-6">
       {menuCategory.map((category) => (
         <button
-          key={category.id} // Assuming category.id is unique (number or string)
+          key={category.id}
           onClick={() => onSelectCategory(category.name)}
           className={`
-            p-4 rounded-xl text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50
+            p-4 rounded-xl text-left transition-colors
             ${
               selectedCategory === category.name
-                ? "bg-primary text-white shadow-lg" // Added shadow for selected
-                : "bg-white hover:bg-gray-50 shadow-sm hover:shadow-md" // Standard shadow
+                ? "bg-primary text-white"
+                : "bg-white hover:bg-gray-50"
             }
           `}
         >
@@ -41,7 +44,7 @@ export default function CategoryGrid({
           <div
             className={`text-sm ${
               selectedCategory === category.name
-                ? "text-white/80" // Slightly transparent for subtext
+                ? "text-white/80"
                 : "text-gray-500"
             }`}
           >

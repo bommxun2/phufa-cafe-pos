@@ -1,340 +1,334 @@
-// src/components/OrderDetailPOS.tsx
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } // Removed: Ingredients from './ProductGrid' - use centralized types
-from "react";
+import { Ingredients } from "./ProductGrid";
+import { useEffect, useState } from "react";
 import { useToast } from "@/contexts/ToastContext";
-import type {
-  CurrentOrderInPOS, // Replaces 'Order'
-  OrderItemInPOS,    // Replaces 'OrderItem'
-  PlaceOrderPayload, // Replaces 'PlaceOrder'
-  OrderItemPayload,  // Replaces 'Item'
-  OrderItemCustomization, // Replaces 'Customizations'
-} from "@/types/order";
-import type { ProductCustomizableIngredient, ProductIngredientOption } from "@/types/menu"; // For ingredients structure
-import { API_BASE_URL } from "@/lib/apiConfig";
+
+interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  ingredients: Ingredients[];
+}
+
+export interface Order {
+  orderId: string;
+  items: OrderItem[];
+  total: number;
+}
 
 interface OrderDetailProps {
-  order: CurrentOrderInPOS; // Use centralized type
-  onSetCurrentOrder: (order: CurrentOrderInPOS) => void; // Prop to update the entire order state in parent
-  updateQuantity: (itemIndex: number, action: "increase" | "decrease") => void;
-  removeItem: (itemIndex: number) => void;
+  order: Order;
+  onSetCurrentOrder: (order: Order) => void;
+  updateQuantity: (index: number, action: "increase" | "decrease") => void;
+  removeItem: (index: number) => void;
+}
+
+interface PlaceOrder {
+  orderMakerEmpId: string;
+  orderByCitizenId: string;
+  items: Item[];
+}
+
+interface Item {
+  menuId: string;
+  quantity: number;
+  note: string;
+  customizations: Customizations[];
+}
+
+interface Customizations {
+  ingredientId: string;
 }
 
 export default function OrderDetail({
   order,
-  onSetCurrentOrder, // This prop suggests parent manages the whole order object
+  onSetCurrentOrder,
   updateQuantity,
   removeItem,
 }: OrderDetailProps) {
   const { addToast } = useToast();
   const items = order?.items || [];
   const total = order?.total || 0;
+  const [customerId, setCustomerId] = useState([]);
+  const [chooseCustomerId, setChooseCustomerId] = useState({});
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [handlePlaceOrder, setHandlePlaceOrder] = useState(false);
 
-  // State for customer lookup
-  const [customerSearchResults, setCustomerSearchResults] = useState<Array<{ citizenId: string; phoneNum: string; point?: number; firstname?: string; lastname?: string }>>([]); // Store customers found by phone
-  const [selectedCustomerForOrder, setSelectedCustomerForOrder] = useState<{ citizenId: string; phoneNum: string; point?: number; } | null>(null);
-  const [customerPhoneInput, setCustomerPhoneInput] = useState("");
-  const [customerLookupError, setCustomerLookupError] = useState("");
-
-  // State for placing order
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  // const [placeOrderError, setPlaceOrderError] = useState<string | null>(null); // For specific error messages from order placement
-
-  // Fetch all customers once for phone lookup - this might be inefficient for many customers.
-  // A dedicated API endpoint /api/customers/by-phone/{phoneNum} would be better.
-  const [allCustomers, setAllCustomers] = useState<Array<{ citizenId: string; phoneNum: string; point: number; firstname: string; lastname: string }>>([]);
   useEffect(() => {
-    async function fetchAllCustomers() {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/customers`);
-        setAllCustomers(response.data);
-      } catch (err) {
-        console.error("Failed to fetch customers for lookup:", err);
-        addToast("Could not load customer data for lookup.", "error");
-      }
+    async function getCustomerId() {
+      const customerId = await axios.get(`/api/customers`);
+      setCustomerId(customerId.data);
     }
-    fetchAllCustomers();
+
+    getCustomerId();
   }, []);
 
-
-  const handlePlaceOrderSubmit = async () => {
-    setIsPlacingOrder(true);
-    // setPlaceOrderError(null);
-
-    const empId = localStorage.getItem("employeeId");
-    if (!empId) {
-      addToast("Employee not logged in. Cannot place order.", "error");
-      setIsPlacingOrder(false);
-      return;
-    }
-
-    if (items.length === 0) {
-      addToast("Cannot place an empty order.", "info");
-      setIsPlacingOrder(false);
-      return;
-    }
-
+  async function placeOrder() {
     try {
-      const orderItemsPayload: OrderItemPayload[] = items.map((item: OrderItemInPOS) => {
-        const customizationsPayload: OrderItemCustomization[] = item.ingredients?.map((ing) => ({
-          ingredientId: ing.default.id, // Assuming ing.default.id is the chosen ingredientId
-        })) || [];
+      const empId = localStorage.getItem("employeeId") || "";
+      const item: Item[] = [];
 
-        return {
-          menuId: item.id,
-          quantity: item.quantity,
-          note: "", // Placeholder for notes, consider adding a UI field for this
-          customizations: customizationsPayload,
-        };
+      items.forEach((i: OrderItem) => {
+        const custom: Customizations[] = i.ingredients.map((ing) => ({
+          ingredientId: ing.default.id,
+        }));
+
+        item.push({
+          menuId: i.id,
+          quantity: i.quantity,
+          note: "",
+          customizations: custom,
+        });
       });
 
-      const placeOrderPayload: PlaceOrderPayload = {
-        orderMakerEmpId: empId, // Removed hardcoded fallback
-        orderByCitizenId: selectedCustomerForOrder?.citizenId, // Optional
-        items: orderItemsPayload,
+      const placeOrder: PlaceOrder = {
+        orderMakerEmpId: empId || "6609696969",
+        orderByCitizenId: chooseCustomerId.citizenId,
+        items: item,
       };
 
-      // TODO: The backend should ideally handle points addition in the same transaction or via a webhook after successful order payment.
-      // Calling two separate POSTs from the client for one logical operation (order + points) can lead to inconsistencies if one fails.
-      await axios.post(`${API_BASE_URL}/orders`, placeOrderPayload);
-
-      if (selectedCustomerForOrder?.citizenId) {
-        try {
-          await axios.post(
-            `${API_BASE_URL}/customers/${selectedCustomerForOrder.citizenId}/points`,
-            { pointsToAdd: 1 } // Assuming 1 point per order
-          );
-          // Optionally refresh customer points display if shown
-        } catch (pointError) {
-          console.error("Failed to add points for customer:", pointError);
-          addToast("Order placed, but failed to add customer points.", "warning");
-        }
+      await axios.post("/api/orders", placeOrder);
+      if (Object.keys(chooseCustomerId).length !== 0) {
+        await axios.post(
+          `/api/customers/${chooseCustomerId.citizenId}/points`,
+          {
+            pointsToAdd: 1,
+          }
+        );
       }
 
+      setHandlePlaceOrder(false);
+      setError("");
+      setPhone("");
+      onSetCurrentOrder({ orderId: "", items: [], total: 0 });
       addToast("Order placed successfully!", "success");
-      // Resetting state
-      onSetCurrentOrder({ orderId: "", items: [], total: 0 }); // Reset parent's order state
-      setSelectedCustomerForOrder(null);
-      setCustomerPhoneInput("");
-      setCustomerLookupError("");
-
     } catch (err) {
-      console.error("Error placing order:", err);
-      const errorMessage = (axios.isAxiosError(err) && err.response?.data?.message) || "Failed to place order.";
-      addToast(errorMessage, "error");
-      // setPlaceOrderError(errorMessage);
-    } finally {
-      setIsPlacingOrder(false);
+      setHandlePlaceOrder(true);
+
+      setTimeout(() => setHandlePlaceOrder(false), 2000);
     }
-  };
+  }
 
-  const handleCustomerPhoneConfirm = () => {
-    setCustomerLookupError("");
-    setSelectedCustomerForOrder(null);
-    const foundCustomer = allCustomers.find(c => c.phoneNum === customerPhoneInput);
-
-    if (foundCustomer) {
-      setSelectedCustomerForOrder({
-        citizenId: foundCustomer.citizenId,
-        phoneNum: foundCustomer.phoneNum,
-        point: foundCustomer.point,
-      });
-      setCustomerLookupError(`ลูกค้า: ${foundCustomer.firstname}, แต้ม: ${foundCustomer.point}`); // Display customer info
+  const onConfirm = (phonenum) => {
+    const customer = customerId.find((id) => id.phoneNum === phonenum);
+    if (customer) {
+      setChooseCustomerId(customer);
+      setError("Have customer! customer have ");
     } else {
-      setCustomerLookupError("ไม่พบข้อมูลลูกค้า!");
+      setError("Customer not found!");
     }
   };
 
-  const handleRedeemFreeDrink = async () => {
-    if (!selectedCustomerForOrder || (selectedCustomerForOrder.point || 0) < 10) {
-      addToast("Not enough points to redeem or no customer selected.", "warning");
-      return;
-    }
+  const freeDrink = async () => {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/customers/${selectedCustomerForOrder.citizenId}/redeem`
+      const res = await axios.post(
+        `/api/customers/${chooseCustomerId.citizenId}/redeem`
       );
-      // Update local customer points display after successful redemption
-      setSelectedCustomerForOrder(prev => prev ? { ...prev, point: response.data.newPointBalance } : null);
-      // Also update the message shown in customerLookupError
-      if (allCustomers.length > 0) { // Check if allCustomers is populated
-        const cust = allCustomers.find(c => c.citizenId === selectedCustomerForOrder.citizenId);
-        if (cust) {
-             setCustomerLookupError(`ลูกค้า: ${cust.firstname}, แต้ม: ${response.data.newPointBalance}`);
-        }
-      }
-      addToast("แลกเครื่องดื่มฟรีสำเร็จ!", "success");
-    } catch (err) {
-      console.error("Redeem failed:", err);
-      const errorMsg = (axios.isAxiosError(err) && err.response?.data?.message) || "แลกคะแนนล้มเหลว";
-      addToast(errorMsg, "error");
+
+      setChooseCustomerId((prev) => ({
+        ...prev,
+        point: res.data.newPointBalance,
+      }));
+      addToast("Redeem success!", "success");
+    } catch (error) {
+      console.error("Redeem failed:", error);
     }
   };
-
-  // Handler for changing ingredient selection within an item
-  const handleIngredientChange = (
-    itemIndex: number,
-    ingredientGroupIndex: number, // Index of the ingredient group (e.g., milk, syrup) in item.ingredients
-    newSelectedIngredientName: string
-  ) => {
-    const updatedOrder = { ...order, items: [...order.items] }; // Shallow copy order and items array
-    const targetItem = { ...updatedOrder.items[itemIndex] }; // Shallow copy the specific item
-    targetItem.ingredients = [...(targetItem.ingredients || [])]; // Shallow copy ingredients array for that item
-
-    const customizableIngredientGroup = { ...(targetItem.ingredients[ingredientGroupIndex]) }; // Shallow copy the specific ingredient group
-
-    const newDefaultOption = customizableIngredientGroup.options.find(opt => opt.name === newSelectedIngredientName);
-    const oldDefaultOption = { ...customizableIngredientGroup.default }; // Copy old default
-
-    if (newDefaultOption) {
-      // Create new default and options array to maintain immutability as much as possible here
-      customizableIngredientGroup.default = { ...newDefaultOption };
-      customizableIngredientGroup.options = [
-        oldDefaultOption, // Add the old default back to the options list
-        ...customizableIngredientGroup.options.filter(opt => opt.name !== newSelectedIngredientName)
-      ];
-
-      targetItem.ingredients[ingredientGroupIndex] = customizableIngredientGroup;
-      updatedOrder.items[itemIndex] = targetItem;
-      onSetCurrentOrder(updatedOrder); // Notify parent with the updated order structure
-    } else {
-      console.warn("Selected ingredient option not found during change.");
-    }
-  };
-
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-medium">Order Detail</h2>
-        <button
-          className="font-bold px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors border-2 border-green-700 disabled:opacity-50"
-          onClick={handleRedeemFreeDrink}
-          disabled={!selectedCustomerForOrder || (selectedCustomerForOrder.point || 0) < 10 || isPlacingOrder}
-        >
-          🥤 แลกเครื่องดื่มฟรี! (10 แต้ม)
-        </button>
+        <div className="mt-4">
+          <div className="mt-4 relative">
+            <button
+              className="font-bold px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors border-2 border-green-700 disabled:opacity-50"
+              onClick={freeDrink}
+              disabled={
+                Object.keys(chooseCustomerId).length === 0 ||
+                chooseCustomerId.point < 10
+              }
+            >
+              🥤 Exchange Free Drink!
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-3 max-h-[calc(100vh-350px)] overflow-y-auto pr-2 mb-4"> {/* Scrollable order items */}
-        {items.length === 0 && <p className="text-gray-500 text-center">ไม่มีรายการในออเดอร์</p>}
-        {items.map((item, itemIndex) => (
-          <div key={`${item.id}-${itemIndex}`} className="border-b border-gray-200 pb-3">
+      <div className="space-y-6">
+        <h3 className="font-medium">Order List</h3>
+        {items.map((item, index) => (
+          <div key={index} className="border-b border-gray-200 pb-4">
             <div className="flex items-start justify-between mb-2">
-              <div className="flex items-start gap-2 flex-grow">
-                <div className="flex flex-col justify-between">
-                  <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm self-start">
+              <div className="flex items-start gap-2">
+                <div className="flex flex-col justify-between h-full">
+                  <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
                     {item.quantity}x
                   </div>
                   <button
-                    className="text-red-600 hover:text-red-800 text-xs mt-1 self-start"
-                    onClick={() => removeItem(itemIndex)}
-                    disabled={isPlacingOrder}
+                    className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mt-9"
+                    onClick={() => removeItem(index)}
                   >
                     ลบ
                   </button>
                 </div>
-                <div className="flex-grow">
+                <div>
                   <div className="font-medium">{item.name}</div>
-                  {item.ingredients && item.ingredients.length > 0 && (
-                    <div className="text-sm text-gray-600 mt-1 space-y-1">
-                      {item.ingredients.map((ingGroup, ingGroupIndex) => (
-                        <div key={`${ingGroup.default.id}-${ingGroupIndex}`} className="flex items-center justify-between">
-                          {ingGroup.options.length > 0 ? (
-                            <select
-                              value={ingGroup.default.name} // Controlled component: value is current default name
-                              className="border rounded px-2 py-1 text-xs w-full max-w-[150px]" // Max width for select
-                              onChange={(e) =>
-                                handleIngredientChange(itemIndex, ingGroupIndex, e.target.value)
-                              }
-                              disabled={isPlacingOrder}
+                  <div className="text-sm text-gray-500">
+                    {item.ingredients.map((ing) => (
+                      <div
+                        key={ing.default.name}
+                        className="flex my-1.5 justify-between"
+                      >
+                        {ing.options.length > 0 ? (
+                          <select
+                            defaultValue={ing.default.name}
+                            className="border rounded px-2 py-1"
+                            onChange={(e) => {
+                              const newName = e.target.value;
+                              var newId = "";
+                              var newAmount = "";
+                              ing.options.map((opt) => {
+                                if (opt.name === e.target.value) {
+                                  newId = opt.id;
+                                  newAmount = opt.amount;
+                                  opt.name = ing.default.name;
+                                  opt.id = ing.default.id;
+                                  opt.amount = ing.default.amount;
+                                }
+                              });
+
+                              ing.default.name = newName;
+                              ing.default.id = newId;
+                              ing.default.amount = newAmount;
+                              console.log(order.items);
+                            }}
+                          >
+                            <option
+                              key={ing.default.name}
+                              value={ing.default.name}
                             >
-                              <option value={ingGroup.default.name} disabled={/* consider if default should be non-selectable after change */ false}>
-                                {ingGroup.default.name}
+                              {ing.default.name}
+                            </option>
+                            {ing.options.map((eachIng) => (
+                              <option key={eachIng.name} value={eachIng.name}>
+                                {eachIng.name}
                               </option>
-                              {ingGroup.options.map((option) => (
-                                <option key={option.id} value={option.name}>
-                                  {option.name} (+ {/* Calculate price diff if any */})
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className="text-xs">{ingGroup.default.name}</span>
-                          )}
-                          <span className="text-xs ml-2">{ingGroup.default.amount}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{ing.default.name}</span>
+                        )}
+
+                        <span className="ml-10">{ing.default.amount}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="font-medium">{(item.price * item.quantity).toFixed(2)}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  <button
-                    className="px-2 py-0.5 text-white bg-primary rounded hover:bg-primary-dark text-xs"
-                    onClick={() => updateQuantity(itemIndex, "decrease")}
-                    disabled={isPlacingOrder || item.quantity <=1}
-                  >
-                    -
-                  </button>
-                  <span className="text-xs w-5 text-center">{item.quantity}</span>
-                  <button
-                    className="px-2 py-0.5 text-white bg-primary rounded hover:bg-primary-dark text-xs"
-                    onClick={() => updateQuantity(itemIndex, "increase")}
-                    disabled={isPlacingOrder}
-                  >
-                    +
-                  </button>
+              <div className="font-medium grid grid-cols-5">
+                <div className="col-span-5 justify-end flex pl-6">
+                  {item.price.toFixed(2)}
                 </div>
+                <button
+                  className="col-span-2 text-white bg-primary rounded-lg mt-10 flex justify-center items-center py text-lg"
+                  onClick={() => updateQuantity(index, "increase")}
+                >
+                  +
+                </button>
+                <button
+                  className="col-span-2 col-start-4 text-white bg-red-700 rounded-lg mt-10 flex justify-center items-center py text-lg"
+                  onClick={() => updateQuantity(index, "decrease")}
+                >
+                  -
+                </button>
               </div>
             </div>
           </div>
         ))}
-      </div>
 
-      <div className="pt-4 border-t">
-        <h3 className="font-medium mb-2">Member</h3>
-        <div className="flex items-end gap-2 mb-2">
+        <div className="pt-4">
+          <h3 className="font-medium mb-4">Payment Detail</h3>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Total</span>
+            <span className="text-xl font-medium">{total.toFixed(2)} THB</span>
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+            Is the customer a member?
+          </h2>
+
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Enter customer phone number:
+          </label>
           <input
             type="tel"
-            value={customerPhoneInput}
-            onChange={(e) => setCustomerPhoneInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="เบอร์โทรลูกค้า (ถ้ามี)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            disabled={isPlacingOrder}
-            maxLength={10}
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setError("");
+            }}
+            placeholder="e.g. 0851764770"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
           />
+
+          {error === "" ? (
+            <button
+              onClick={() => onConfirm(phone)}
+              disabled={phone.length < 10}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              Confirm
+            </button>
+          ) : error === "Have customer! customer have " ? (
+            <span className="text-green-600 text-base block mb-2 font-bold">
+              {error}
+              <span className="text-red-600">{chooseCustomerId.point} </span>
+              point!
+            </span>
+          ) : (
+            <>
+              <span className="text-red-600 text-base block mb-2 font-bold">
+                {error}
+              </span>
+              <button
+                onClick={() => onConfirm(phone)}
+                disabled={phone.length < 9}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Confirm
+              </button>
+            </>
+          )}
+        </div>
+
+        {handlePlaceOrder == true ? (
+          <>
+            <span className="text-red-600 text-base block font-bold">
+              Error order!
+            </span>
+            <button
+              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              onClick={placeOrder}
+            >
+              Order now
+            </button>
+          </>
+        ) : (
           <button
-            onClick={handleCustomerPhoneConfirm}
-            disabled={customerPhoneInput.length < 10 || isPlacingOrder || allCustomers.length === 0}
-            className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm whitespace-nowrap"
+            className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+            onClick={placeOrder}
           >
-            ค้นหา
+            Order now
           </button>
-        </div>
-        {customerLookupError && (
-          <p className={`text-xs ${selectedCustomerForOrder ? 'text-green-600' : 'text-red-600'} mb-3`}>
-            {customerLookupError}
-          </p>
         )}
-
-        <div className="flex justify-between items-center mb-4">
-          <span className="font-medium">ยอดรวม</span>
-          <span className="text-xl font-medium">{total.toFixed(2)} THB</span>
-        </div>
-
-        <button
-          className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-70"
-          onClick={handlePlaceOrderSubmit}
-          disabled={isPlacingOrder || items.length === 0}
-        >
-          {isPlacingOrder ? "กำลังสั่งซื้อ..." : "สั่งซื้อเลย"}
-        </button>
-        {/* {placeOrderError && <p className="text-red-500 text-sm mt-2 text-center">{placeOrderError}</p>} */}
       </div>
     </div>
   );
