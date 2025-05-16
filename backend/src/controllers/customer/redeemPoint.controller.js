@@ -33,21 +33,7 @@ const redeemPointController = async (req, res) => {
     const orderItemId = generateOrderItemId();
     const orderDateTime = new Date();
 
-    await connection.execute(
-      "INSERT INTO OrderItem (OrderItemID, OrderID, MenuID, Quantity, Note, ItemBasePrice, CustomizeCost, ItemTotalPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        orderItemId,
-        orderId,
-        "M213560000",
-        1,
-        "แลกเครื่องดื่มฟรี",
-        0,
-        0,
-        0,
-      ]
-    );
-
-    await connection.execute(
+    await conn.execute(
       "INSERT INTO `Order` (OrderID, OrderDateTime, OrderStatus, OrderPrice, EmpID, CitizenID) VALUES (?, ?, ?, ?, ?, ?)",
       [
         orderId,
@@ -56,6 +42,20 @@ const redeemPointController = async (req, res) => {
         0,
         "6609696970",
         customerId || null,
+      ]
+    );
+
+    await conn.execute(
+      "INSERT INTO OrderItem (OrderItemID, OrderID, MenuID, Quantity, Note, ItemBasePrice, CustomizeCost, ItemTotalPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        orderItemId,
+        orderId,
+        "M213560002",
+        1,
+        "แลกเครื่องดื่มฟรี",
+        0,
+        0,
+        0,
       ]
     );
 
