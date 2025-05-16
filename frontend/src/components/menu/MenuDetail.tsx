@@ -185,7 +185,7 @@ export default function MenuDetail({ menu, isCreating = false, onSaved, onCancel
   const handleSave = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
-    let finalMenuUrl = form.menuUrl || "";
+    let finalMenuUrl = form.menuURL || "";
 
     if (selectedFile) {
       setIsUploading(true);
