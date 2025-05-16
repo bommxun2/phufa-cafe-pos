@@ -4,6 +4,7 @@
 
 body {
   @apply antialiased; /* Smooths out fonts */
+  font-family: var(--font-mitr), sans-serif;
 }
 
 /* Toast animation from Toast.tsx refactor */
