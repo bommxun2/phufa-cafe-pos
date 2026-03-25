@@ -88,3 +88,6 @@ sudo yum install -y tofu
 
 # Install ansible
 sudo yum install ansible -y
+
+# Install libatomic
+sudo dnf install libatomic -y
