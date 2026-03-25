@@ -46,15 +46,14 @@ docker run -d --name sonarqube \
   sonarqube:community
 
 # Add Trivy Repository and Install
-cat << EOF > /etc/yum.repos.d/trivy.repo
+cat << EOF | sudo tee -a /etc/yum.repos.d/trivy.repo
 [trivy]
 name=Trivy repository
-baseurl=https://pkg.trivy.dev/rpm/releases/\$basearch/
+baseurl=https://aquasecurity.github.io/trivy-repo/rpm/releases/\$basearch/
 gpgcheck=1
 enabled=1
-gpgkey=https://pkg.trivy.dev/rpm/public.key
+gpgkey=https://aquasecurity.github.io/trivy-repo/rpm/public.key
 EOF
-
 dnf install -y trivy
 
 # Download and Run OpenTofu install script
