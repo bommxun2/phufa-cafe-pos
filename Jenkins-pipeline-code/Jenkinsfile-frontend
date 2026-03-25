@@ -35,7 +35,7 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-key', region: 'us-east-1') {
                     dir("frontend") {
-                        sh "aws s3 sync dist/ s3://${params.S3_BUCKET_NAME} --delete"
+                        sh "aws s3 sync out/ s3://${params.S3_BUCKET_NAME} --delete"
                     }
                 }
             }
