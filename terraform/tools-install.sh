@@ -33,20 +33,24 @@ docker run -d --name sonarqube \
   -e SONAR_WEB_CONTEXT=/sonarqube \
   sonarqube:community
 
-# Add Trivy Repository and Install
-cat << EOF > /etc/yum.repos.d/trivy.repo
-[trivy]
-name=Trivy repository
-baseurl=https://pkg.trivy.dev/rpm/releases/\$basearch/
-gpgcheck=1
-enabled=1
-gpgkey=https://pkg.trivy.dev/rpm/public.key
-EOF
-
-dnf install -y trivy
+# Installing Base Packages & Docker CLI
+sudo docker exec -u root jenkins apt-get update
+sudo docker exec -u root jenkins apt-get install -y docker.io curl unzip
 
 # Download and Run OpenTofu install script
-curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o /tmp/install-opentofu.sh
-chmod +x /tmp/install-opentofu.sh
-/tmp/install-opentofu.sh --install-method standalone
-rm -f /tmp/install-opentofu.sh
+sudo docker exec -u root jenkins bash -c "\
+  apt-get update && \
+  apt-get install -y curl unzip && \
+  curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh && \
+  chmod +x install-opentofu.sh && \
+  ./install-opentofu.sh --install-method standalone && \
+  rm install-opentofu.sh"
+
+# Installing AWS CLI
+sudo docker exec -u root jenkins curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo docker exec -u root jenkins unzip -q awscliv2.zip
+sudo docker exec -u root jenkins ./aws/install
+sudo docker exec -u root jenkins rm -rf awscliv2.zip aws
+
+# Installing Trivy
+sudo docker exec -u root jenkins bash -c "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin"
