@@ -61,5 +61,7 @@
       ansible.builtin.command: /usr/local/bin/docker-compose up -d
       args:
         chdir: /home/ec2-user/monitoring
+      become: yes
+      become_user: ec2-user
       register: compose_output
       changed_when: "'Started' in compose_output.stdout or 'Created' in compose_output.stdout"
