@@ -1,6 +1,6 @@
 properties([
     parameters([
-        choice(choices: ['plan', 'output', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
+        choice(choices: ['output', 'plan', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
     ])
 ])
 
