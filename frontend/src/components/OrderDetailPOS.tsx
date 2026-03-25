@@ -92,7 +92,7 @@ export default function OrderDetail({
 
       const placeOrder: PlaceOrder = {
         orderMakerEmpId: empId || "6609696969",
-        orderByCitizenId: chooseCustomerId.citizenId,
+        orderByCitizenId: chooseCustomerId.citizenId || "",
         items: item,
       };
 
