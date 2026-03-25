@@ -39,7 +39,7 @@ resource "aws_instance" "nginx_proxy" {
 
 resource "aws_instance" "jenkins" {
   ami           = data.aws_ami.amazon_linux_2023.id
-  instance_type = var.instance_type
+  instance_type = "t3.large"
   subnet_id     = aws_subnet.private.id
   key_name      = aws_key_pair.prod.key_name
   user_data     = file("${path.module}/tools-install.sh")
