@@ -56,6 +56,13 @@ resource "aws_security_group" "private_instances_sg" {
   }
 
   ingress {
+    from_port       = 9000 # Sonarqube
+    to_port         = 9000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.nginx_sg.id]
+  }
+
+  ingress {
     from_port       = 3000 # Grafana
     to_port         = 3000
     protocol        = "tcp"

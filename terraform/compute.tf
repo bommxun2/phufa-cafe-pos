@@ -47,6 +47,10 @@ resource "aws_instance" "jenkins" {
   iam_instance_profile = "LabInstanceProfile"
   
   vpc_security_group_ids = [aws_security_group.private_instances_sg.id]
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+  }
   
   tags = {
     Name = "jenkins-server"
