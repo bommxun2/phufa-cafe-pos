@@ -3,7 +3,7 @@ services:
     container_name: node-api
     image: bommxun/node-app:latest
     env_file:
-      - env
+      - .env
     ports:
       - 5000:5000
     networks:
