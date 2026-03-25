@@ -1,6 +1,6 @@
 properties([
     parameters([
-        choice(choices: ['plan', 'apply', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
+        choice(choices: ['plan', 'output', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
     ])
 ])
 
@@ -15,14 +15,14 @@ pipeline {
         stage('Initializing Terraform') {
             steps {
                 dir('terraform') {
-                    sh '/usr/local/bin/tofu init'
+                    sh 'tofu init'
                 }
             }
         }
         stage('Validate Terraform Code') {
             steps {
                 dir('terraform') {
-                    sh '/usr/local/bin/tofu validate'
+                    sh 'tofu validate'
                 }
             }
         }
@@ -33,18 +33,16 @@ pipeline {
                         echo "Action Selected: ${params.'Terraform-Action'}"
                         
                         if (params.'Terraform-Action' == 'plan') {
-                            sh "/usr/local/bin/tofu plan"
+                            sh "tofu plan"
                         } 
-                        else if (params.'Terraform-Action' == 'apply') {
-                            sh "/usr/local/bin/tofu apply -auto-approve"
-                            
-                            def ecr_url = sh(script: '/usr/local/bin/tofu output -raw ecr_repository_url', returnStdout: true).trim()
-                            def backend_ip = sh(script: '/usr/local/bin/tofu output -raw backend_private_ip', returnStdout: true).trim()
-                            def db_endpoint = sh(script: '/usr/local/bin/tofu output -raw rds_endpoint', returnStdout: true).trim()
+                        else if (params.'Terraform-Action' == 'output') {                            
+                            def ecr_url = sh(script: 'tofu output -raw ecr_repository_url', returnStdout: true).trim()
+                            def backend_ip = sh(script: 'tofu output -raw backend_private_ip', returnStdout: true).trim()
+                            def db_endpoint = sh(script: 'tofu output -raw rds_endpoint', returnStdout: true).trim()
                             def pem_b64 = sh(script: 'cat pos-system-key.pem | base64 -w 0', returnStdout: true).trim()
 
-                            def api_gateway_url = sh(script: '/usr/local/bin/tofu output -raw api_gateway_url', returnStdout: true).trim()
-                            def s3_website_bucket_name = sh(script: '/usr/local/bin/tofu output -raw s3_website_bucket_name', returnStdout: true).trim()
+                            def api_gateway_url = sh(script: 'tofu output -raw api_gateway_url', returnStdout: true).trim()
+                            def s3_website_bucket_name = sh(script: 'tofu output -raw s3_website_bucket_name', returnStdout: true).trim()
                             
                             build job: 'pos-app-pipeline', parameters: [
                                 string(name: 'ECR_REGISTRY', value: ecr_url),
@@ -59,7 +57,7 @@ pipeline {
                             ], wait: false
                         } 
                         else if (params.'Terraform-Action' == 'destroy') {
-                            sh "/usr/local/bin/tofu destroy -auto-approve"
+                            sh "tofu destroy -auto-approve"
                         }
                     }
                 }
