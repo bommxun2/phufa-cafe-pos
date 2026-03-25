@@ -61,18 +61,14 @@ pipeline {
         }
         stage("Docker Image Build") {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') {
-                    dir('backend') {
-                        sh "docker build -t ${params.ECR_REGISTRY}:${IMAGE_TAG} ."
-                    }
+                dir('backend') {
+                    sh "docker build -t ${params.ECR_REGISTRY}:${IMAGE_TAG} ."
                 }
             }
         }
         stage("Docker Image Pushing") {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') {
-                    sh "docker push ${params.ECR_REGISTRY}:${IMAGE_TAG}"
-                }
+                sh "docker push ${params.ECR_REGISTRY}:${IMAGE_TAG}"
             }
         }
         stage("TRIVY Image Scan") {
