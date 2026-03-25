@@ -46,7 +46,7 @@ resource "aws_instance" "jenkins" {
 
   iam_instance_profile = "LabInstanceProfile"
   
-  vpc_security_group_ids = [aws_security_group.private_instances_sg.id]
+  vpc_security_group_ids = [aws_security_group.private_instances_jenkins_sg.id]
   root_block_device {
     volume_size = 30
     volume_type = "gp3"
@@ -63,7 +63,7 @@ resource "aws_instance" "backend" {
   subnet_id     = aws_subnet.private.id
   key_name      = aws_key_pair.prod.key_name
 
-  vpc_security_group_ids = [aws_security_group.private_instances_sg.id]
+  vpc_security_group_ids = [aws_security_group.private_instances_app_sg.id]
 
   tags = {
     Name = "backend-server"

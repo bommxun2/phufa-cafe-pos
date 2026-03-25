@@ -36,17 +36,10 @@ resource "aws_security_group" "nginx_sg" {
   }
 }
 
-resource "aws_security_group" "private_instances_sg" {
-  name        = "private_instances_sg"
+resource "aws_security_group" "private_instances_jenkins_sg" {
+  name        = "private_instances_jenkins_sg"
   description = "Allow traffic from Nginx and internal VPC"
   vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.nginx_sg.id]
-  }
 
   ingress {
     from_port       = 8080 # Jenkins
@@ -61,6 +54,30 @@ resource "aws_security_group" "private_instances_sg" {
     protocol        = "tcp"
     security_groups = [aws_security_group.nginx_sg.id]
   }
+
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.nginx_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "private-instances-sg"
+  }
+}
+
+resource "aws_security_group" "private_instances_app_sg" {
+  name        = "private_instances_app_sg"
+  description = "Allow traffic from Nginx and internal VPC"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port       = 3000 # Grafana
@@ -87,7 +104,7 @@ resource "aws_security_group" "private_instances_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.nginx_sg.id]
+    security_groups = [aws_security_group.nginx_sg.id, aws_security_group.private_instances_jenkins_sg.id]
   }
 
   egress {
@@ -111,7 +128,7 @@ resource "aws_security_group" "rds_sg" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.private_instances_sg.id]
+    security_groups = [aws_security_group.private_instances_app_sg.id]
   }
 
   egress {
