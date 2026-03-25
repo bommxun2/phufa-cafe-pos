@@ -85,3 +85,6 @@ metadata_expire=300
 EOF
 sudo yum update
 sudo yum install -y tofu
+
+# Install ansible
+sudo yum install ansible -y
