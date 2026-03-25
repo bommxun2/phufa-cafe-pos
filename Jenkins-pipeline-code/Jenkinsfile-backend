@@ -15,6 +15,9 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         IMAGE_TAG = "v${env.BUILD_NUMBER}" 
     }
+    tools {
+        nodejs 'nodejs'
+    }
     
     stages {
         stage('Cleaning Workspace') {
@@ -39,7 +42,9 @@ pipeline {
         }
         stage('Installing Dependencies') {
             steps {
-                dir('backend') { sh 'npm install' }
+                dir('backend') { 
+                    sh 'npm ci' 
+                }
             }
         }
         stage('OWASP Dependency-Check Scan') {
