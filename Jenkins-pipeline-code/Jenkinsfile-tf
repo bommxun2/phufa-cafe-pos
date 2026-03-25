@@ -32,10 +32,7 @@ pipeline {
                     script {
                         echo "Action Selected: ${params.'Terraform-Action'}"
                         
-                        if (params.'Terraform-Action' == 'plan') {
-                            sh "tofu plan"
-                        } 
-                        else if (params.'Terraform-Action' == 'output') {                            
+                        if (params.'Terraform-Action' == 'output') {                            
                             def ecr_url = sh(script: 'tofu output -raw ecr_repository_url', returnStdout: true).trim()
                             def backend_ip = sh(script: 'tofu output -raw backend_private_ip', returnStdout: true).trim()
                             def db_endpoint = sh(script: 'tofu output -raw rds_endpoint', returnStdout: true).trim()
@@ -55,6 +52,9 @@ pipeline {
                                 string(name: 'API_URL', value: api_gateway_url),
                                 string(name: 'S3_BUCKET_NAME', value: s3_website_bucket_name)
                             ], wait: false
+                        } 
+                        else if (params.'Terraform-Action' == 'plan') {
+                            sh "tofu plan"
                         } 
                         else if (params.'Terraform-Action' == 'destroy') {
                             sh "tofu destroy -auto-approve"
