@@ -51,6 +51,12 @@
         group: ec2-user
         mode: '0644'
 
+    - name: Login to AWS ECR
+      ansible.builtin.shell: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 137316433611.dkr.ecr.us-east-1.amazonaws.com
+      become: yes
+      become_user: ec2-user
+
     - name: Run docker-compose to start App and Monitoring
       ansible.builtin.command: /usr/local/bin/docker-compose up -d
       args:
