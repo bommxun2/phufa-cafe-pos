@@ -8,7 +8,6 @@ pipeline {
         string(name: 'DB_USER', defaultValue: 'admin', description: 'DB User')
         string(name: 'DB_PASSWORD', defaultValue: 'YourStrongPassword123!', description: 'DB Password')
         string(name: 'DB_NAME', defaultValue: 'phufadb', description: 'DB Name') 
-        string(name: 'SSH_KEY_B64', defaultValue: '', description: 'Base64 encoded PEM key from TF')
     }
     
     environment  {
@@ -108,9 +107,15 @@ DB_NAME=${params.DB_NAME}
         stage('Run Ansible setup server') {
             steps {
                 dir('ansible') {
-                    sh "echo '${params.SSH_KEY_B64}' | base64 -d > pos-system-key.pem"
-                    sh "chmod 400 pos-system-key.pem"
-                    sh "ansible-playbook -i inventory.ini setup-app-server.yml -e backend_server_private_ip=${params.BACKEND_PRIVATE_IP}"
+                    withCredentials([file(credentialsId: 'pos-ssh-key-file', variable: 'SECRET_PEM')]) {
+                        script {
+                            sh 'cp $SECRET_PEM ./pos-system-key.pem'
+                            sh 'chmod 400 pos-system-key.pem'
+                            
+                            sh "ansible-playbook -i inventory.ini setup-app-server.yml -e backend_server_private_ip=${params.BACKEND_PRIVATE_IP}"
+                            
+                        }
+                    }
                 }
             }
         }

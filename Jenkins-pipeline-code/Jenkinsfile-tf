@@ -41,7 +41,6 @@ pipeline {
                             def ecr_url = sh(script: 'tofu output -raw ecr_repository_url', returnStdout: true).trim()
                             def backend_ip = sh(script: 'tofu output -raw backend_private_ip', returnStdout: true).trim()
                             def db_endpoint = sh(script: 'tofu output -raw rds_endpoint', returnStdout: true).trim()
-                            def pem_b64 = sh(script: 'cat pos-system-key.pem | base64 -w 0', returnStdout: true).trim()
 
                             def api_gateway_url = sh(script: 'tofu output -raw api_gateway_url', returnStdout: true).trim()
                             def s3_website_bucket_name = sh(script: 'tofu output -raw s3_website_bucket_name', returnStdout: true).trim()
@@ -49,8 +48,7 @@ pipeline {
                             build job: 'pos-app-pipeline', parameters: [
                                 string(name: 'ECR_REGISTRY', value: ecr_url),
                                 string(name: 'BACKEND_PRIVATE_IP', value: backend_ip),
-                                string(name: 'DB_ENDPOINT', value: db_endpoint),
-                                string(name: 'SSH_KEY_B64', value: pem_b64)
+                                string(name: 'DB_ENDPOINT', value: db_endpoint)
                             ], wait: false
 
                             build job: 'frontend-app-pipeline', parameters: [
