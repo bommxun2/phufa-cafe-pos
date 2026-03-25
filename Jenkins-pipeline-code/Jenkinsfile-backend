@@ -5,14 +5,10 @@ pipeline {
         string(name: 'ECR_REGISTRY', defaultValue: '', description: 'URL of ECR')
         string(name: 'BACKEND_PRIVATE_IP', defaultValue: '', description: 'Private IP from Terraform')
         string(name: 'DB_ENDPOINT', defaultValue: '', description: 'DB Endpoint')
-        string(name: 'DB_USER', defaultValue: 'phufa', description: 'DB User')
-        string(name: 'DB_PASSWORD', defaultValue: 'phufa', description: 'DB Password')
-        string(name: 'DB_NAME', defaultValue: 'phufa', description: 'DB Name') 
+        string(name: 'DB_USER', defaultValue: 'admin', description: 'DB User')
+        string(name: 'DB_PASSWORD', defaultValue: 'YourStrongPassword123!', description: 'DB Password')
+        string(name: 'DB_NAME', defaultValue: 'phufadb', description: 'DB Name') 
         string(name: 'SSH_KEY_B64', defaultValue: '', description: 'Base64 encoded PEM key from TF')
-    }
-
-    tools {
-        nodejs 'nodejs'
     }
     
     environment  {

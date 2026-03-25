@@ -19,7 +19,7 @@ pipeline {
         stage("Environment Variables") {
             steps {
                 dir("frontend") {
-                    sh "echo 'NEXT_PUBLIC_API_BASE_URL =${params.API_URL}' > .env"
+                    sh "echo 'NEXT_PUBLIC_API_BASE_URL=${params.API_URL}' > .env"
                 }
             }
         }
