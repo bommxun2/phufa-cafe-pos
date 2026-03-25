@@ -43,6 +43,10 @@ resource "aws_instance" "jenkins" {
   subnet_id     = aws_subnet.private.id
   key_name      = aws_key_pair.prod.key_name
   user_data     = file("${path.module}/tools-install.sh")
+
+  iam_instance_profile {
+    name = "LabInstanceProfile"
+  }
   
   vpc_security_group_ids = [aws_security_group.private_instances_sg.id]
   
