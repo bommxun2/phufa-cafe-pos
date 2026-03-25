@@ -234,7 +234,21 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,visualstudiocode,node
-
 # Database files
 data/*
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+
+# Keys
+*.pem
+
+# Kubernetes
+kubeconfig.yaml
+
+# Ansible
+*.retry
