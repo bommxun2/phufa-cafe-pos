@@ -43,6 +43,11 @@ interface Customizations {
   ingredientId: string;
 }
 
+type CustomerProps = {
+  citizenId?: string;
+  name?: string;
+};
+
 export default function OrderDetail({
   order,
   onSetCurrentOrder,
@@ -53,7 +58,7 @@ export default function OrderDetail({
   const items = order?.items || [];
   const total = order?.total || 0;
   const [customerId, setCustomerId] = useState([]);
-  const [chooseCustomerId, setChooseCustomerId] = useState({});
+  const [chooseCustomerId, setChooseCustomerId] = useState<CustomerProps>({});
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [handlePlaceOrder, setHandlePlaceOrder] = useState(false);
