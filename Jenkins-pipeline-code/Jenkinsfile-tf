@@ -26,6 +26,11 @@ pipeline {
                 }
             }
         }
+        stage('Create App Pipelines') {
+            steps {
+                jobDsl targets: 'Jenkins-pipeline-code/jobs.groovy'
+            }
+        }
         stage('Terraform Action') {
             steps {
                 dir('terraform') {
