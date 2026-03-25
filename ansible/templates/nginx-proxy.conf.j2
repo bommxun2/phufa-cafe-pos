@@ -1,0 +1,45 @@
+server {
+    listen 80;
+    server_name _;
+
+    # Backend App
+    location /api/ {
+        proxy_pass http://{{ app_server_private_ip }}:5000/; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Grafana
+    location /dashboard-g/ {
+        proxy_pass http://{{ app_server_private_ip }}:3000; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Prometheus
+    location /dashboard-p/ {
+        proxy_pass http://{{ app_server_private_ip }}:9090; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Jenkins
+    location /jenkins-start/ {
+        proxy_pass http://{{ jenkins_server_private_ip }}:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SonarQube
+    location /sonarqube/ {
+        proxy_pass http://{{ jenkins_server_private_ip }}:9000;
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

@@ -1,0 +1,36 @@
+---
+- name: Setup Nginx Reverse Proxy Server
+  hosts: nginx-proxy
+  become: yes
+
+  tasks:
+    - name: Update all OS packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: Install Nginx
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+
+    - name: Copy Nginx reverse proxy configuration
+      ansible.builtin.copy:
+        src: templates/nginx-proxy.conf.j2
+        dest: /etc/nginx/conf.d/proxy.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Nginx
+
+    - name: Ensure Nginx is started and enabled on boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

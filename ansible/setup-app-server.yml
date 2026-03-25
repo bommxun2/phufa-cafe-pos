@@ -1,0 +1,60 @@
+---
+- name: Setup Backend App and Monitoring Server
+  hosts: backend-server
+  become: yes # Use root user
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: Install required dependencies
+      ansible.builtin.dnf:
+        name:
+          - docker
+          - git
+          - curl
+          - htop
+        state: present
+
+    - name: Start and enable Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Download and install Docker Compose
+      ansible.builtin.get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Create monitoring directory and set ownership
+      ansible.builtin.file:
+        path: /home/ec2-user/monitoring
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+
+    - name: Copy monitoring configuration files from Git to EC2
+      ansible.builtin.copy:
+        src: ../monitoring/
+        dest: /home/ec2-user/monitoring/
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+
+    - name: Run docker-compose to start App and Monitoring
+      ansible.builtin.command: /usr/local/bin/docker-compose up -d
+      args:
+        chdir: /home/ec2-user/monitoring
+      register: compose_output
+      changed_when: "'Started' in compose_output.stdout or 'Created' in compose_output.stdout"
