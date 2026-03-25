@@ -1,0 +1,75 @@
+properties([
+    parameters([
+        choice(choices: ['plan', 'apply', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
+    ])
+])
+
+pipeline {
+    agent any
+    stages {
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/bommxun2/phufa-cafe-pos.git'
+            }
+        }
+        stage('Initializing Terraform') {
+            steps {
+                withAWS(credentials: 'aws-key', region: 'us-east-1') {
+                    dir('terraform') {
+                        sh 'tofu init'
+                    }
+                }
+            }
+        }
+        stage('Validate Terraform Code') {
+            steps {
+                withAWS(credentials: 'aws-key', region: 'us-east-1') {
+                    dir('terraform') {
+                        sh 'tofu validate'
+                    }
+                }
+            }
+        }
+        stage('Terraform Action') {
+            steps {
+                withAWS(credentials: 'aws-key', region: 'us-east-1') {
+                    dir('terraform') {
+                        script {
+                            echo "Action Selected: ${params.'Terraform-Action'}"
+                            
+                            if (params.'Terraform-Action' == 'plan') {
+                                sh "tofu plan"
+                            } 
+                            else if (params.'Terraform-Action' == 'apply') {
+                                sh "tofu apply -auto-approve"
+                                
+                                def ecr_url = sh(script: 'tofu output -raw ecr_repository_url', returnStdout: true).trim()
+                                def backend_ip = sh(script: 'tofu output -raw backend_private_ip', returnStdout: true).trim()
+                                def db_endpoint = sh(script: 'tofu output -raw rds_endpoint', returnStdout: true).trim()
+                                def pem_b64 = sh(script: 'cat pos-system-key.pem | base64 -w 0', returnStdout: true).trim()
+
+                                def api_gateway_url = sh(script: 'tofu output -raw api_gateway_url', returnStdout: true).trim()
+                                def s3_website_bucket_name = sh(script: 'tofu output -raw s3_website_bucket_name', returnStdout: true).trim()
+                                
+                                build job: 'pos-app-pipeline', parameters: [
+                                    string(name: 'ECR_REGISTRY', value: ecr_url),
+                                    string(name: 'BACKEND_PRIVATE_IP', value: backend_ip),
+                                    string(name: 'DB_ENDPOINT', value: db_endpoint),
+                                    string(name: 'SSH_KEY_B64', value: pem_b64)
+                                ], wait: false
+
+                                build job: 'frontend-app-pipeline', parameters: [
+                                    string(name: 'API_URL', value: api_gateway_url),
+                                    string(name: 'S3_BUCKET_NAME', value: s3_website_bucket_name)
+                                ], wait: false
+                            } 
+                            else if (params.'Terraform-Action' == 'destroy') {
+                                sh "tofu destroy -auto-approve"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

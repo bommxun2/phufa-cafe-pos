@@ -1,0 +1,110 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'ECR_REGISTRY', defaultValue: '', description: 'URL of ECR')
+        string(name: 'BACKEND_PRIVATE_IP', defaultValue: '', description: 'Private IP from Terraform')
+        string(name: 'DB_ENDPOINT', defaultValue: '', description: 'DB Endpoint')
+        string(name: 'DB_USER', defaultValue: 'phufa', description: 'DB User')
+        string(name: 'DB_PASSWORD', defaultValue: 'phufa', description: 'DB Password')
+        string(name: 'DB_NAME', defaultValue: 'phufa', description: 'DB Name') 
+        string(name: 'SSH_KEY_B64', defaultValue: '', description: 'Base64 encoded PEM key from TF')
+    }
+
+    tools {
+        nodejs 'nodejs'
+    }
+    
+    environment  {
+        SCANNER_HOME = tool 'sonar-scanner'
+        IMAGE_TAG = "v${env.BUILD_NUMBER}" 
+    }
+    
+    stages {
+        stage('Cleaning Workspace') {
+            steps { cleanWs() }
+        }
+        stage('Checkout from Git') {
+            steps { git branch: 'main', url: 'https://github.com/bommxun2/phufa-cafe-pos.git' }
+        }
+        stage('Sonarqube Analysis') {
+            steps {
+                dir('backend') {
+                    withSonarQubeEnv('sonar-scanner') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=node-app -Dsonar.projectKey=node-app '''
+                    }
+                }
+            }
+        }
+        stage('Quality Check') {
+            steps {
+                script { waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' }
+            }
+        }
+        stage('Installing Dependencies') {
+            steps {
+                dir('backend') { sh 'npm install' }
+            }
+        }
+        stage('OWASP Dependency-Check Scan') {
+            steps {
+                dir('backend') {
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
+        }
+        stage('Trivy File Scan') {
+            steps {
+                dir('backend') { sh 'trivy fs . > trivyfs.txt' }
+            }
+        }
+        stage("Docker Image Build") {
+            steps {
+                withAWS(credentials: 'aws-key', region: 'us-east-1') {
+                    dir('backend') {
+                        sh "docker build -t ${params.ECR_REGISTRY}:${IMAGE_TAG} ."
+                    }
+                }
+            }
+        }
+        stage("Docker Image Pushing") {
+            steps {
+                withAWS(credentials: 'aws-key', region: 'us-east-1') {
+                    sh "docker push ${params.ECR_REGISTRY}:${IMAGE_TAG}"
+                }
+            }
+        }
+        stage("TRIVY Image Scan") {
+            steps {
+                sh "trivy image ${params.ECR_REGISTRY}:${IMAGE_TAG} > trivyimage.txt"
+            }
+        }
+        stage('Update Deployment file') {
+            steps {
+                dir('monitoring') {
+                    sh "sed -i 's|image: .*|image: ${params.ECR_REGISTRY}:${IMAGE_TAG}|g' docker-compose.yml"
+                    
+                    script {
+                        def envContent = """
+DB_HOST=${params.DB_ENDPOINT}
+DB_USER=${params.DB_USER}
+DB_PASSWORD=${params.DB_PASSWORD}
+DB_NAME=${params.DB_NAME}
+"""
+                        writeFile file: '.env', text: envContent.trim()
+                    }
+                }
+            }
+        }
+        stage('Run Ansible setup server') {
+            steps {
+                dir('ansible') {
+                    sh "echo '${params.SSH_KEY_B64}' | base64 -d > pos-system-key.pem"
+                    sh "chmod 400 pos-system-key.pem"
+                    sh "ansible-playbook -i inventory.ini setup-app-server.yml -e backend_server_private_ip=${params.BACKEND_PRIVATE_IP}"
+                }
+            }
+        }
+    }
+}
