@@ -63,6 +63,8 @@ resource "aws_instance" "backend" {
   subnet_id     = aws_subnet.private.id
   key_name      = aws_key_pair.prod.key_name
 
+  iam_instance_profile = "LabInstanceProfile"
+
   vpc_security_group_ids = [aws_security_group.private_instances_app_sg.id]
 
   tags = {
